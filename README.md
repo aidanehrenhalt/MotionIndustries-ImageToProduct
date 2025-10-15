@@ -3,7 +3,7 @@
 
 ### Stack:
 1. Backend: Python
-2. Machine Learning: Open to suggestions/ideas
+2. Machine Learning: Open to suggestions/ideas (XGBoost or similar suggested)
 3. Computer Vision & Image Processing
 4. Web Scraping
 5. Database & Search (Elastic Preferred) -- To clarify: [ElasticSearch](https://www.elastic.co/elasticsearch)?
@@ -17,6 +17,9 @@
 - Note: Must be capable of handling inconsistencies (i.e. name variations, incomplete data, etc.)
 
 **2. ML-Based Confidence Ranking**
+- Develop ML model (XGBoost or similar)
+- Model ranks image-product matches by confidence score, factors considered include: text matching in image name (OCR vs. Product Data), image quality, source reliability, and visual relevance
+- Model should provide clear confidence scores to prioritize human review efforts (easy to understand/use data for manual review)
 
 **3. Review & Validation Interface**
 
