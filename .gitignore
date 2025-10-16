@@ -1,5 +1,6 @@
-# --- Environment Variables / Secrets ---
+# --- Environment Variables & Virtual Environment ---
 .env
+.venv/
 
 # --- Python ---
 __pycache__/
