@@ -29,3 +29,6 @@
 
 **6. **Documentation****
 
+
+## Setup for Local Development
+- If using WSL, ensure you create / activate venv via: `source .venv/bin/activate` in root dir
