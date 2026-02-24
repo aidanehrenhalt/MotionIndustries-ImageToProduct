@@ -92,16 +92,16 @@ def load_product_catalog(csv_path: str) -> list[dict]:
 
                 # Search keywords: Priorities are MFR Name, MFR #, then Category/Description Context
                 keywords = []
-                if mfr_name and mfr_part_number:
-                    keywords.append(f"{mfr_name} {mfr_part_number}")
-                if mfr_part_number and category:
-                    # Extra first few woords from category to focus search
-                    category_shortened = " ".join(category.split()[:3]) # Take first 3 words of category
-                    keywords.append(f"{mfr_part_number} {category_shortened}")
-
+                if web_desc:
+                    # Primary: First 5 words of web description, strip punctuation
+                    desc_words = web_desc.replace(",", "").replace(".", "").split()
+                    keywords.append(" ".join(desc_words[:5]))
+                if mfr_name and web_desc:
+                    desc_words = web_desc.replace(",", "").replace(".", "").split()
+                    keywords.append(f"{mfr_name} {' '.join(desc_words[:4])}")
                 # If no good keywords, use first 50 chars of web_desc
-                if not keywords and web_desc:
-                    keywords.append(web_desc[:50])
+                if not keywords and category:
+                    keywords.append(category)
 
                 products.append({
                     "motion_product_id": row.get("ID", "").strip(),
@@ -243,11 +243,11 @@ def scrape_openverse(product: dict, keyword: str) -> list[dict]:
     try:
         log.info(f"[OpenVerse] Searching for '{keyword}'")
         response = requests.get(
-            "https://api.openverse.engineering/v1/images",
+            "https://api.openverse.org/v1/images",
             params={
                 "q": keyword, 
                 "page_size": MAX_IMAGES_PER_SOURCE,
-                "license_type": "commercial, modification"
+                "license_type": "commercial,modification"
                 },
             headers=HEADERS,
             timeout=10
