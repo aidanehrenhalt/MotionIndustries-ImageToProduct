@@ -10,8 +10,10 @@
 # Machine Learning
 pandas
 openpyxl
-torch
-torch torchvision
+#torch
+#torch torchvision
+#Check torch documentation to determine correct installation for torch and torchvision
+
 Pillow
 
 # Utilities
