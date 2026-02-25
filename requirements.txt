@@ -8,7 +8,11 @@
 
 
 # Machine Learning
-
+pandas
+openpyxl
+torch
+torch torchvision
+Pillow
 
 # Utilities
 
