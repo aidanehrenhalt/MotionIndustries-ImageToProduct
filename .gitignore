@@ -1,0 +1,20 @@
+# --- Environment Variables & Virtual Environment ---
+.env
+.venv/
+
+# --- Python ---
+__pycache__/
+secrets.py
+
+# --- Data ---
+data/
+
+# --- Logs & Cache ---
+*.log
+*.out
+*.err
+.cache/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
