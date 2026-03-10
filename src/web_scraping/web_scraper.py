@@ -680,10 +680,8 @@ if __name__ == "__main__":
     s3 = None
     if args.minio:
         if args.minio_endpoint:
-            global MINIO_ENDPOINT
             MINIO_ENDPOINT = args.minio_endpoint
         if args.minio_bucket:
-            global MINIO_BUCKET
             MINIO_BUCKET = args.minio_bucket
         try:
             s3 = create_minio_client()

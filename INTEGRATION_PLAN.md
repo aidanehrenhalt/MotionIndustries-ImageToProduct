@@ -1,248 +1,188 @@
-# Scraper → Elasticsearch & Image Storage Integration Plan
+# Integration Details — Edge Cases and Pitfalls
 
-## Part 1: Elasticsearch Metadata Integration
-
-### Problem 1: `download_meta` fields are silently dropped
-
-In `scrape_product_images()` (`web_scraper.py` line ~421), `download_meta` is used to
-compute `confidence_hints` but then only `downloaded` is kept in the `enriched` list.
-The other five fields are thrown away before `enriched` is ever returned:
-
-| Dropped field      | ES mapping field    |
-|-------------------|---------------------|
-| `local_path`      | `local_path`        |
-| `file_size_bytes` | `file_size_bytes`   |
-| `actual_width`    | `actual_width`      |
-| `actual_height`   | `actual_height`     |
-| `actual_format`   | `actual_format`     |
-| `download_error`  | `download_error`    |
-
-**Fix:** add these six fields to the `enriched.append()` call in `scrape_product_images()`.
+This document describes how the scraper, Elasticsearch, and MinIO integration works under
+the hood, with emphasis on edge cases that can cause errors and patterns to avoid.
 
 ---
 
-### Problem 2: Field name mismatch
+## Elasticsearch Strict Mapping
 
-The `enriched` dict uses `width` and `height` for API-reported dimensions, but the
-`mi_candidate_images` ES mapping uses `api_width` and `api_height`.
+Both indices (`mi_products`, `mi_candidate_images`) use `dynamic: "strict"`. This means
+Elasticsearch will **reject any document that contains a field not defined in the mapping**.
 
-**Fix:** rename `width` → `api_width` and `height` → `api_height` in the
-`enriched.append()` call.
+### What this means in practice
 
----
+- If you add a new field to the scraper's output (e.g., in `index_to_elasticsearch()`),
+  you **must** also add it to `setup_elasticsearch.py` and recreate the indices.
+- If you forget, bulk indexing will silently fail for those documents. The scraper logs
+  the error count (e.g., `Indexed 0 candidate images for s10807860 (2 errors)`) but does
+  not abort — other products continue processing.
+- To fix: update the mapping in `setup_elasticsearch.py`, then run
+  `venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate` and re-scrape.
 
-### Problem 3: Product document is incomplete
+### Why strict mode?
 
-`scrape_product_images()` returns a stripped `product` sub-dict with only 5 fields.
-`mi_products` needs the full CSV row:
-
-| Missing field          | Source                    |
-|-----------------------|---------------------------|
-| `item_number`         | `load_product_catalog()`  |
-| `enterprise_name`     | `load_product_catalog()`  |
-| `internal_description`| `load_product_catalog()`  |
-| `pgc`                 | `load_product_catalog()`  |
-| `search_keywords`     | `load_product_catalog()`  |
-
-These are all available in the `product` dict built by `load_product_catalog()` — they
-just never get passed through to `save_record()`.
-
-**Fix:** pass the full `product` CSV row into the new ES write function (see Problem 4).
+Permissive (`dynamic: true`) would silently accept typos or unexpected fields and auto-create
+mappings with potentially wrong types (e.g., a number field might get mapped as `text`).
+Strict mode catches these mistakes early.
 
 ---
 
-### Problem 4: No ES write step exists
+## Field Name Mismatch: `width`/`height` vs. `api_width`/`api_height`
 
-`save_record()` only writes JSON. A new function is needed to handle the three-step ES
-write sequence:
+The source APIs (Wikimedia, OpenVerse) return dimensions as `width` and `height`. The
+enriched image dict in `scrape_product_images()` keeps these names. However, the ES mapping
+uses `api_width` and `api_height` to distinguish API-reported dimensions from
+Pillow-verified `actual_width` and `actual_height`.
 
-```
-1. es.index()   →  index the product document into mi_products
-2. bulk()       →  bulk-index all candidate images into mi_candidate_images
-3. es.update()  →  update the product's scrape_summary sub-object
-```
-
-The JSON output from `save_record()` can remain alongside ES writes — useful for
-debugging during the transition.
-
-**Fix:** add `index_to_elasticsearch(es, product_row, record)` to `web_scraper.py`.
-
----
-
-### Integration Steps (in order)
-
-1. In `enriched.append()` — add the 6 `download_meta` fields; rename `width` → `api_width`
-   and `height` → `api_height`
-2. Pass the full product CSV row into the new ES write function alongside `record`
-3. Add `index_to_elasticsearch(es, product_row, record)` function
-4. Add `--es-url` CLI argument (default `http://localhost:9200`) and `--no-es` flag
-5. In `__main__` — initialize the ES client if `--no-es` is not set; call
-   `index_to_elasticsearch()` after each product scrape
-
----
-
-### ES Write Pattern (reference)
+The translation happens in `index_to_elasticsearch()`:
 
 ```python
-import hashlib
-from elasticsearch import Elasticsearch
-from elasticsearch.helpers import bulk
-
-es = Elasticsearch("http://localhost:9200")
-
-# Step 1 — Index product document
-es.index(index="mi_products", id=product_row["motion_product_id"], document={
-    "motion_product_id":    product_row["motion_product_id"],
-    "item_number":          product_row["item_number"],
-    "enterprise_name":      product_row["enterprise_name"],
-    "mfr_name":             product_row["mfr_name"],
-    "mfr_name_text":        product_row["mfr_name"],
-    "mfr_part_number":      product_row["mfr_part_number"],
-    "mfr_part_number_text": product_row["mfr_part_number"],
-    "description":          product_row["web_desc"],
-    "internal_description": product_row.get("internal_description", ""),
-    "pgc":                  product_row["pgc"],
-    "category":             product_row["category"],
-    "search_keywords":      product_row["search_keywords"],
-    "catalog_loaded_at":    record["scraped_at"],
-    "schema_version":       record["schema_version"],
-})
-
-# Step 2 — Bulk-index candidate images
-actions = []
-for img in record["candidate_images"]:
-    doc_id = hashlib.sha1(
-        f"{product_row['motion_product_id']}:{img['image_url']}".encode()
-    ).hexdigest()
-    actions.append({
-        "_op_type": "index",
-        "_index":   "mi_candidate_images",
-        "_id":      doc_id,
-        "_source":  {
-            "motion_product_id": product_row["motion_product_id"],
-            "mfr_name":          product_row["mfr_name"],
-            "mfr_part_number":   product_row["mfr_part_number"],
-            **img,   # all enriched image fields including the newly threaded download_meta fields
-        },
-    })
-bulk(es, actions)
-
-# Step 3 — Update scrape_summary on the product document
-es.update(index="mi_products", id=product_row["motion_product_id"], doc={
-    "scrape_summary": {**record["scrape_summary"], "last_scraped_at": record["scraped_at"]}
-})
+"api_width":  img.get("width"),
+"api_height": img.get("height"),
 ```
 
-> **Re-scraping is safe.** Document IDs are deterministic — re-running the scraper on the
-> same product upserts existing documents rather than creating duplicates.
+If you index the raw enriched dict directly (e.g., using `**img`), the `width` and `height`
+fields will be rejected by the strict mapping. Always use the explicit field mapping in
+`index_to_elasticsearch()`.
 
 ---
 
----
+## Document ID Determinism
 
-## Part 2: Image File Storage
+### Products
 
-The scraper currently saves image files to the local `output/images/` folder. This works
-on a single machine but breaks down for a shared team project — the review UI, ML pipeline,
-and scraper would all need access to the same filesystem. The solution is **object storage**.
+Product document `_id` = `motion_product_id` (from the CSV). Re-scraping the same product
+overwrites the existing document.
 
----
+### Candidate Images
 
-### Recommendation: MinIO for dev, S3-compatible API everywhere
+Image document `_id` = `SHA1("{motion_product_id}:{image_url}")`. This means:
 
-**MinIO** is an open-source, S3-compatible object storage server that runs as a Docker
-container alongside the existing Elasticsearch stack. The Python client (`boto3`) uses the
-exact same API as AWS S3, Cloudflare R2, and Backblaze B2 — switching environments only
-requires changing the endpoint URL, not any application code.
-
-| Environment       | Service            | Cost                                  |
-|------------------|--------------------|---------------------------------------|
-| Local dev        | MinIO (Docker)     | Free                                  |
-| Shared / prod    | Cloudflare R2      | Free up to 10 GB, no egress fees      |
-| Shared / prod    | AWS S3             | Free tier 5 GB / 12 months; $0.023/GB |
-| Shared / prod    | Backblaze B2       | $0.006/GB/month (cheapest paid)       |
-
-**Cloudflare R2** is the most practical option for a senior design project — free up to
-10 GB with no egress fees and S3-compatible, so no code changes when moving off local MinIO.
+- The same product + same image URL always produces the same doc ID (upsert, no duplicates).
+- If an image URL changes (e.g., Wikimedia updates the file), it creates a new document
+  and the old one becomes orphaned. Use `minio_es_match.py --verify` to detect these.
+- The SHA1 is computed over the **full image URL**, including query parameters. Two URLs
+  that differ only in query string (e.g., `?width=800` vs. `?width=1200`) produce
+  different doc IDs.
 
 ---
 
-### How it fits into the scraper
+## MinIO Object Key Structure
 
-Instead of writing raw bytes to a local file, `download_image()` uploads to the bucket
-and returns the object key. The `local_path` field in `mi_candidate_images` stores the
-object key (e.g., `images/s10807860_00_abc12345.jpg`). The review UI constructs
-`{BASE_URL}/{object_key}` to display images — no shared filesystem needed.
+Images are stored in MinIO under: `images/{product_id}/{product_id}_{index}_{url_hash}.{ext}`
 
----
+- `product_id`: the `motion_product_id` from the CSV
+- `index`: zero-padded position in the scraper's result list (e.g., `00`, `01`)
+- `url_hash`: first 8 characters of the MD5 hash of the image URL (for uniqueness)
+- `ext`: file extension derived from Pillow's detected format (not from the URL)
 
-### Adding MinIO to `docker-compose.yml`
+The same object key is stored in the ES `local_path` field, so ES and MinIO stay in sync.
 
-```yaml
-  minio:
-    image: minio/minio
-    container_name: mi_minio
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # MinIO web console (browse uploaded images in browser)
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    volumes:
-      - minio_data:/data
+### Bucket auto-creation
 
-volumes:
-  esdata:
-  minio_data:    # add alongside existing esdata volume
-```
-
-MinIO's web console at `http://localhost:9001` lets the team browse uploaded images
-visually, similar to how Kibana works for ES documents.
+`create_minio_client()` calls `head_bucket()` and creates the bucket if it doesn't exist.
+This is safe for local dev but should be disabled in production — buckets should be
+pre-provisioned with appropriate access policies.
 
 ---
 
-### Required package
+## Download Validation
 
-```
-boto3>=1.34
-```
+`download_image()` validates every downloaded file with Pillow before storing it:
 
----
+1. Checks that the HTTP response `Content-Type` starts with `image/`
+2. Opens the raw bytes with `Image.open()` and calls `img.verify()` to confirm it's a
+   valid image (not a corrupt file or HTML error page)
+3. Re-opens after verify (Pillow requires this) to extract actual dimensions and format
 
-### Upload pattern in `download_image()` (reference)
+If any step fails, `downloaded` is set to `False` and `download_error` captures the
+exception message. The image is still recorded in ES (with metadata from the API) but
+no file is uploaded to MinIO.
 
-```python
-import boto3
+### Common download failures
 
-s3 = boto3.client(
-    "s3",
-    endpoint_url="http://localhost:9000",       # swap for real S3/R2 URL in production
-    aws_access_key_id="minioadmin",
-    aws_secret_access_key="minioadmin",
-)
-
-object_key = f"images/{product_id}_{index:02d}_{url_hash}.{ext}"
-s3.put_object(
-    Bucket="mi-scraped-images",
-    Key=object_key,
-    Body=raw,
-    ContentType=mime_type,
-)
-# Store object_key in the ES document instead of a local filepath
-```
-
----
-
-## Summary of Changes Required
-
-| Task | File | Size |
+| Error | Cause | Effect |
 |---|---|---|
-| Thread `download_meta` fields into `enriched` | `web_scraper.py` | Small — 6 lines |
-| Rename `width`/`height` → `api_width`/`api_height` | `web_scraper.py` | Trivial |
-| Pass full product CSV row to ES write function | `web_scraper.py` | Small |
-| Add `index_to_elasticsearch()` function | `web_scraper.py` | Medium |
-| Add `--es-url` / `--no-es` CLI flags | `web_scraper.py` | Small |
-| Add MinIO service to Docker Compose | `docker-compose.yml` | Small |
-| Swap local file write → S3/MinIO upload in `download_image()` | `web_scraper.py` | Medium |
-| Add `boto3` to requirements | `requirements.txt` | Trivial |
+| `URL did not return an image` | Server returned HTML/JSON instead of an image | Skipped, error logged |
+| `HTTPError 403` | Source blocks scraper user-agent or hotlinking | Skipped, error logged |
+| `ConnectionTimeout` | Source server unresponsive | Skipped, error logged |
+| `UnidentifiedImageError` | File is corrupt or not a supported image format | Skipped, error logged |
+
+None of these abort the scraper — it continues to the next image.
+
+---
+
+## Elasticsearch Bulk Indexing
+
+`index_to_elasticsearch()` uses `bulk()` with `raise_on_error=False`. This means:
+
+- If some documents in the batch fail (e.g., mapping violation), the successful ones are
+  still indexed.
+- The function logs the count of errors but does **not** raise an exception.
+- If you need to debug bulk errors, temporarily set `raise_on_error=True` or inspect the
+  `errors` list returned by `bulk()`.
+
+### Partial failures are silent
+
+If 5 out of 7 images index successfully and 2 fail, you'll see
+`Indexed 5 candidate images for s10807860 (2 errors)`. The product's `scrape_summary`
+will still report `total_images_found: 7` and `images_downloaded: 7` (since download
+succeeded), but only 5 will be queryable in ES. This mismatch can be confusing.
+
+To detect: compare `scrape_summary.images_downloaded` against the actual document count
+for that product in `mi_candidate_images`.
+
+---
+
+## Global Variable Scope in `__main__`
+
+The MinIO config variables (`MINIO_ENDPOINT`, `MINIO_BUCKET`) are defined at module level.
+The `if __name__ == "__main__"` block is also at module level, so these variables can be
+reassigned directly — no `global` declaration is needed.
+
+Using `global` inside a conditional block at module scope causes a `SyntaxError` in
+Python 3.12+. If you need to override these values from CLI args, assign them directly:
+
+```python
+if args.minio_endpoint:
+    MINIO_ENDPOINT = args.minio_endpoint  # No "global" needed
+```
+
+The `global` keyword is only required inside **functions** that need to reassign a
+module-level variable.
+
+---
+
+## Rate Limiting and API Etiquette
+
+The scraper includes a `REQUEST_DELAY` (1.5 seconds) between API calls. Both Wikimedia
+and OpenVerse have rate limits:
+
+- **Wikimedia Commons:** No strict rate limit, but requests aggressive use of `User-Agent`
+  identification. The scraper includes a project-specific user agent.
+- **OpenVerse:** Rate-limited; unauthenticated requests are throttled more aggressively.
+  If you see `429 Too Many Requests` errors, increase `REQUEST_DELAY`.
+
+### Wikimedia title encoding
+
+Wikimedia file pages use URL-encoded titles. The scraper uses `urllib.parse.quote()` to
+construct `source_page` URLs. If a title contains special characters (e.g., parentheses,
+Unicode), incorrect encoding will produce broken links in ES but won't cause scraper errors.
+
+---
+
+## Re-scraping Behavior
+
+Because document IDs are deterministic:
+
+- **Products:** Re-scraping overwrites the product document with fresh `catalog_loaded_at`
+  and `scrape_summary`.
+- **Images:** Re-scraping the same URL overwrites the existing image document. New images
+  (new URLs) create new documents. Old images (URLs that no longer appear in API results)
+  are **not deleted** — they remain in ES as stale records.
+- **MinIO:** Re-uploading the same object key overwrites the file. There is no versioning
+  enabled by default.
+
+To clean up stale data, use `setup_elasticsearch.py --recreate` to wipe indices and
+re-scrape from scratch.
