@@ -26,6 +26,9 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import quote, quote_plus, urlparse
 
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import bulk
+
 # Config
 CHROMEDRIVER_PATH = None # Set path if manually installed, None for using webdriver-manager from pip install
 
@@ -104,12 +107,14 @@ def load_product_catalog(csv_path: str) -> list[dict]:
                     keywords.append(category)
 
                 products.append({
-                    "motion_product_id": row.get("ID", "").strip(),
+                    "motion_product_id": (row.get("<ID>") or row.get("ID") or "").strip(),
                     "item_number": row.get("Item Number", "").strip(),
+                    "enterprise_name": row.get("Enterprise Name", "").strip(),
                     "mfr_name": mfr_name,
                     "mfr_part_number": mfr_part_number,
                     "category": category,
                     "web_desc": web_desc,
+                    "internal_description": row.get("Motion Internal Description", "").strip(),
                     "pgc": row.get("PGC", "").strip(),
                     "search_keywords": keywords
                 })
@@ -432,6 +437,12 @@ def scrape_product_images(
             "height": img.get("height"),
             "mime_type": img.get("mime_type", ""),
             "downloaded": download_meta.get("downloaded", False),
+            "local_path": download_meta.get("local_path"),
+            "file_size_bytes": download_meta.get("file_size_bytes"),
+            "actual_width": download_meta.get("actual_width"),
+            "actual_height": download_meta.get("actual_height"),
+            "actual_format": download_meta.get("actual_format"),
+            "download_error": download_meta.get("download_error"),
             "confidence_hints": confidence,
             "scraped_at": scraped_at,
         })
@@ -468,6 +479,88 @@ def save_record(record: dict) -> Path:
     log.info(f"Saved record to {filename}")
     return filename
 
+def index_to_elasticsearch(record: dict, es: Elasticsearch, product_row: dict):
+    """
+    Index a scrape record into Elasticsearch (mi_products + mi_candidate_images).
+    product_row is the original CSV-loaded dict with all catalog fields.
+    """
+    product = record["product"]
+    pid = product["motion_product_id"]
+
+    # Step 1 — Index/upsert the product document
+    es.index(index="mi_products", id=pid, document={
+        "motion_product_id":    pid,
+        "item_number":          product_row.get("item_number", ""),
+        "enterprise_name":      product_row.get("enterprise_name", ""),
+        "mfr_name":             product["mfr_name"],
+        "mfr_name_text":        product["mfr_name"],
+        "mfr_part_number":      product["mfr_part_number"],
+        "mfr_part_number_text": product["mfr_part_number"],
+        "description":          product["description"],
+        "internal_description": product_row.get("internal_description", ""),
+        "pgc":                  product_row.get("pgc", ""),
+        "category":             product["category"],
+        "search_keywords":      product_row.get("search_keywords", []),
+        "catalog_loaded_at":    record["scraped_at"],
+        "schema_version":       record["schema_version"],
+    })
+
+    # Step 2 — Bulk-index candidate images
+    actions = []
+    for img in record["candidate_images"]:
+        doc_id = hashlib.sha1(
+            f"{pid}:{img['image_url']}".encode()
+        ).hexdigest()
+        actions.append({
+            "_op_type": "index",
+            "_index":   "mi_candidate_images",
+            "_id":      doc_id,
+            "_source": {
+                "motion_product_id": pid,
+                "mfr_name":          product["mfr_name"],
+                "mfr_part_number":   product["mfr_part_number"],
+                "candidate_index":   img["index"],
+                "scraped_at":        img["scraped_at"],
+                "schema_version":    record["schema_version"],
+                "image_url":         img["image_url"],
+                "thumbnail_url":     img["thumbnail_url"],
+                "source_page":       img["source_page"],
+                "source_name":       img["source_name"],
+                "title":             img["title"],
+                "license":           img["license"],
+                "attribution":       img["attribution"],
+                "tags":              img["tags"],
+                "mime_type":         img["mime_type"],
+                "api_width":         img.get("width"),
+                "api_height":        img.get("height"),
+                "downloaded":        img["downloaded"],
+                "local_path":        img.get("local_path"),
+                "file_size_bytes":   img.get("file_size_bytes"),
+                "actual_width":      img.get("actual_width"),
+                "actual_height":     img.get("actual_height"),
+                "actual_format":     img.get("actual_format"),
+                "download_error":    img.get("download_error"),
+                "confidence_hints":  img["confidence_hints"],
+            },
+        })
+    if actions:
+        success, errors = bulk(es, actions, raise_on_error=False)
+        log.info(f"[ES] Indexed {success} candidate images for {pid}"
+                 + (f" ({len(errors)} errors)" if errors else ""))
+
+    # Step 3 — Update scrape_summary on the product
+    es.update(index="mi_products", id=pid, doc={
+        "scrape_summary": {
+            "total_images_found":    record["scrape_summary"]["total_images_found"],
+            "images_downloaded":     record["scrape_summary"]["images_downloaded"],
+            "sources_queried":       record["scrape_summary"]["sources_queried"],
+            "avg_preliminary_score": record["scrape_summary"]["avg_preliminary_score"],
+            "last_scraped_at":       record["scraped_at"],
+        }
+    })
+    log.info(f"[ES] Product {pid} indexed with scrape_summary")
+
+
 def print_summary(record: dict):
     product = record["product"]
     summary = record["scrape_summary"]
@@ -494,6 +587,9 @@ if __name__ == "__main__":
     parser.add_argument("--product", type=str, default=None, help="Specific product ID or category keyword to scrape")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of products to scrape (for testing)")
     parser.add_argument("--no-download", action="store_true", help="Skip downloading images, only scrape metadata")
+    parser.add_argument("--es", action="store_true", help="Index results into Elasticsearch (must be running)")
+    parser.add_argument("--es-host", default="localhost", help="Elasticsearch host (default: localhost)")
+    parser.add_argument("--es-port", default=9200, type=int, help="Elasticsearch port (default: 9200)")
     args = parser.parse_args()
 
     # Load products from CSV
@@ -517,14 +613,31 @@ if __name__ == "__main__":
         log.error("No products to scrape after filtering. Exiting.")
         exit(1)
 
+    # Connect to Elasticsearch if requested
+    es = None
+    if args.es:
+        es_url = f"http://{args.es_host}:{args.es_port}"
+        es = Elasticsearch(es_url)
+        try:
+            info = es.info()
+            log.info(f"Connected to Elasticsearch {info['version']['number']} at {es_url}")
+        except Exception as e:
+            log.error(f"Could not connect to Elasticsearch at {es_url}: {e}")
+            log.error("Make sure it's running: docker-compose up -d")
+            exit(1)
+
     saved_files = []
 
     for product in products:
         record = scrape_product_images(product, download_images=not args.no_download)
         saved_path = save_record(record)
         saved_files.append(saved_path)
+        if es:
+            index_to_elasticsearch(record, es, product)
         print_summary(record)
-    
+
     print(f"\nCompleted scraping {len(products)} products. Records saved to:")
-    print(f"JSON {JSON_DIR.resolve()}")
-    print(f"Images {IMAGES_DIR.resolve()}")
+    print(f"  JSON   {JSON_DIR.resolve()}")
+    print(f"  Images {IMAGES_DIR.resolve()}")
+    if es:
+        print(f"  Elasticsearch  {es_url} (mi_products + mi_candidate_images)")

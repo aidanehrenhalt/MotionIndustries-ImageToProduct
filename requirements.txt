@@ -1,14 +1,12 @@
-# Installed
+# Web Scraping
 Pillow
 selenium
 requests
+beautifulsoup4
+lxml
 
-
-# Core
-
-
-# Web Scraping
-
+# Elasticsearch
+elasticsearch>=8.0.0,<9.0.0
 
 # Image Processing
 
@@ -17,6 +15,3 @@ requests
 
 
 # Utilities
-
-
-# 
