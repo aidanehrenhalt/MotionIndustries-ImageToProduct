@@ -29,6 +29,9 @@ from urllib.parse import quote, quote_plus, urlparse
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
+import boto3
+from botocore.exceptions import ClientError
+
 # Config
 CHROMEDRIVER_PATH = None # Set path if manually installed, None for using webdriver-manager from pip install
 
@@ -48,6 +51,12 @@ HEADERS = {
         "Contact: aehrenhalt3@gatech.edu)"
     )
 }
+
+# MinIO / S3-compatible object storage config
+MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://localhost:9000")
+MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET = os.environ.get("MINIO_BUCKET", "mi-images")
 
 REQUEST_DELAY = 1.5 # Seconds between Requests
 # SELENIUM_PAGE_WAIT = 8 # Wait for Page to Load (Later for using Selenium)
@@ -278,25 +287,49 @@ def scrape_openverse(product: dict, keyword: str) -> list[dict]:
     log.info(f"[OpenVerse] Found {len(results)} images for '{keyword}'")
     return results
 
-# Image Downloading / Processing
-def download_image(image_url: str, product_id: str, index: int) -> dict:
+# MinIO Client Setup
+def create_minio_client() -> boto3.client:
     """
-    Download image from URL and save to disk with a unique filename.
-    Returns metadata dict with local file path and image info.
+    Create a boto3 S3 client configured for MinIO.
+    Ensures the target bucket exists.
+    """
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=MINIO_ENDPOINT,
+        aws_access_key_id=MINIO_ACCESS_KEY,
+        aws_secret_access_key=MINIO_SECRET_KEY,
+        region_name="us-east-1",  # Required by boto3, value doesn't matter for MinIO
+    )
+    # Ensure bucket exists
+    try:
+        s3.head_bucket(Bucket=MINIO_BUCKET)
+        log.info(f"[MinIO] Bucket '{MINIO_BUCKET}' exists")
+    except ClientError:
+        s3.create_bucket(Bucket=MINIO_BUCKET)
+        log.info(f"[MinIO] Created bucket '{MINIO_BUCKET}'")
+    return s3
+
+# Image Downloading / Processing
+def download_image(image_url: str, product_id: str, index: int, s3_client=None) -> dict:
+    """
+    Download image from URL. If s3_client is provided, upload to MinIO/S3.
+    Otherwise, save to local disk.
+    Returns metadata dict with storage path and image info.
     """
     meta = {
-        "downloaded": False, 
-        "local_path": None, 
+        "downloaded": False,
+        "local_path": None,
+        "storage_type": "minio" if s3_client else "local",
         "file_size_bytes": None,
-        "actual_width": None, 
-        "actual_height": None, 
+        "actual_width": None,
+        "actual_height": None,
         "download_error": None
     }
     try:
         response = requests.get(
-            image_url, 
-            headers=HEADERS, 
-            timeout=10, 
+            image_url,
+            headers=HEADERS,
+            timeout=10,
             stream=True
         )
         response.raise_for_status()
@@ -311,20 +344,43 @@ def download_image(image_url: str, product_id: str, index: int) -> dict:
 
         fmt = img.format or "UNKNOWN"
         ext = fmt.lower().replace("jpeg", "jpg") # Normalize jpeg to jpg
+        content_type = response.headers.get("Content-Type", f"image/{ext}")
         url_hash = hashlib.md5(image_url.encode('utf-8')).hexdigest()[:8] # Short hash of URL for uniqueness
-        filepath = IMAGES_DIR / f"{product_id}_{index:02d}_{url_hash}.{ext}"
+        filename = f"{product_id}_{index:02d}_{url_hash}.{ext}"
 
-        with open(filepath, "wb") as f: # w for Write, b for Binary
-            f.write(raw)
-
-        meta.update({
-            "downloaded": True,
-            "local_path": str(filepath),
-            "file_size_bytes": len(raw),
-            "actual_width": img.width,
-            "actual_height": img.height,
-            "actual_format": fmt,
-        })
+        if s3_client:
+            # Upload to MinIO/S3
+            object_key = f"images/{product_id}/{filename}"
+            s3_client.put_object(
+                Bucket=MINIO_BUCKET,
+                Key=object_key,
+                Body=raw,
+                ContentType=content_type,
+            )
+            log.info(f"[MinIO] Uploaded {object_key} ({len(raw)/1024:.0f}KB)")
+            meta.update({
+                "downloaded": True,
+                "local_path": object_key,  # Store the object key, not a filesystem path
+                "storage_type": "minio",
+                "file_size_bytes": len(raw),
+                "actual_width": img.width,
+                "actual_height": img.height,
+                "actual_format": fmt,
+            })
+        else:
+            # Save to local filesystem (original behavior)
+            filepath = IMAGES_DIR / filename
+            with open(filepath, "wb") as f:
+                f.write(raw)
+            meta.update({
+                "downloaded": True,
+                "local_path": str(filepath),
+                "storage_type": "local",
+                "file_size_bytes": len(raw),
+                "actual_width": img.width,
+                "actual_height": img.height,
+                "actual_format": fmt,
+            })
     except Exception as e:
         meta["download_error"] = str(e)
         log.warning(f"Failed to download image from {image_url}: {e}")
@@ -389,6 +445,7 @@ def scrape_product_images(
     product: dict,
     # driver: webdriver.Chrome = None, # Lowkey not needed right now, but needed later when expanding to other sources
     download_images: bool = True,
+    s3_client=None,
 ) -> dict:
     """
     Run all scraping steps for a single product and return compiled metadata and results.
@@ -415,12 +472,13 @@ def scrape_product_images(
         log.info(f"Processing image {index+1}/{len(raw_images)} from {img.get('source_name')}")
         download_meta = (
             download_image(
-                img["image_url"], 
-                product["motion_product_id"], 
-                index
+                img["image_url"],
+                product["motion_product_id"],
+                index,
+                s3_client=s3_client,
             )
             if (download_images and img.get("image_url"))
-            else {"downloaded": False}
+            else {"downloaded": False, "storage_type": None}
         )
         confidence = compute_confidence_hints(product, {**img, **download_meta})
         enriched.append({
@@ -437,6 +495,7 @@ def scrape_product_images(
             "height": img.get("height"),
             "mime_type": img.get("mime_type", ""),
             "downloaded": download_meta.get("downloaded", False),
+            "storage_type": download_meta.get("storage_type"),
             "local_path": download_meta.get("local_path"),
             "file_size_bytes": download_meta.get("file_size_bytes"),
             "actual_width": download_meta.get("actual_width"),
@@ -534,6 +593,7 @@ def index_to_elasticsearch(record: dict, es: Elasticsearch, product_row: dict):
                 "api_width":         img.get("width"),
                 "api_height":        img.get("height"),
                 "downloaded":        img["downloaded"],
+                "storage_type":      img.get("storage_type"),
                 "local_path":        img.get("local_path"),
                 "file_size_bytes":   img.get("file_size_bytes"),
                 "actual_width":      img.get("actual_width"),
@@ -590,6 +650,9 @@ if __name__ == "__main__":
     parser.add_argument("--es", action="store_true", help="Index results into Elasticsearch (must be running)")
     parser.add_argument("--es-host", default="localhost", help="Elasticsearch host (default: localhost)")
     parser.add_argument("--es-port", default=9200, type=int, help="Elasticsearch port (default: 9200)")
+    parser.add_argument("--minio", action="store_true", help="Upload images to MinIO instead of local filesystem")
+    parser.add_argument("--minio-endpoint", default=None, help="MinIO endpoint URL (default: env MINIO_ENDPOINT or http://localhost:9000)")
+    parser.add_argument("--minio-bucket", default=None, help="MinIO bucket name (default: env MINIO_BUCKET or mi-images)")
     args = parser.parse_args()
 
     # Load products from CSV
@@ -613,6 +676,23 @@ if __name__ == "__main__":
         log.error("No products to scrape after filtering. Exiting.")
         exit(1)
 
+    # Connect to MinIO if requested
+    s3 = None
+    if args.minio:
+        if args.minio_endpoint:
+            global MINIO_ENDPOINT
+            MINIO_ENDPOINT = args.minio_endpoint
+        if args.minio_bucket:
+            global MINIO_BUCKET
+            MINIO_BUCKET = args.minio_bucket
+        try:
+            s3 = create_minio_client()
+            log.info(f"Connected to MinIO at {MINIO_ENDPOINT}, bucket: {MINIO_BUCKET}")
+        except Exception as e:
+            log.error(f"Could not connect to MinIO at {MINIO_ENDPOINT}: {e}")
+            log.error("Make sure it's running: docker-compose up -d")
+            exit(1)
+
     # Connect to Elasticsearch if requested
     es = None
     if args.es:
@@ -629,7 +709,7 @@ if __name__ == "__main__":
     saved_files = []
 
     for product in products:
-        record = scrape_product_images(product, download_images=not args.no_download)
+        record = scrape_product_images(product, download_images=not args.no_download, s3_client=s3)
         saved_path = save_record(record)
         saved_files.append(saved_path)
         if es:
@@ -638,6 +718,9 @@ if __name__ == "__main__":
 
     print(f"\nCompleted scraping {len(products)} products. Records saved to:")
     print(f"  JSON   {JSON_DIR.resolve()}")
-    print(f"  Images {IMAGES_DIR.resolve()}")
+    if s3:
+        print(f"  Images MinIO {MINIO_ENDPOINT}/{MINIO_BUCKET}/images/")
+    else:
+        print(f"  Images {IMAGES_DIR.resolve()}")
     if es:
         print(f"  Elasticsearch  {es_url} (mi_products + mi_candidate_images)")

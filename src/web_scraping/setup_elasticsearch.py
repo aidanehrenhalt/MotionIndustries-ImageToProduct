@@ -128,7 +128,8 @@ IMAGES_MAPPINGS = {
 
         # ── Download results ───────────────────────────────────────────────────
         "downloaded":      {"type": "boolean"},
-        "local_path":      {"type": "keyword", "index": False},  # Filesystem path — display only
+        "storage_type":    {"type": "keyword"},                  # "local" or "minio"
+        "local_path":      {"type": "keyword", "index": False},  # Filesystem path or MinIO object key
         "file_size_bytes": {"type": "integer"},
         "actual_width":    {"type": "integer"},   # Post-download Pillow-verified dimensions
         "actual_height":   {"type": "integer"},
