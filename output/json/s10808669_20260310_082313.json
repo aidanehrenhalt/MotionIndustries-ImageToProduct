@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-10T12:22:50.064169+00:00",
+  "product": {
+    "motion_product_id": "s10808669",
+    "mfr_name": "FAG (Schaeffler)",
+    "mfr_part_number": "Z-525351.04.DRGL",
+    "description": "Spherical Roller Bearing - 320 mm ID, 820 mm OD, 14.5000 in Width, Straight Bore, Open, C0",
+    "category": "ST.LAR.SPHER.> 500MM ID"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}
