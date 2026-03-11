@@ -1,6 +1,7 @@
 # Web Scraping & Image Processing
-requests
 Pillow
+requests
+beautifulsoup4
 
 # Elasticsearch
 elasticsearch>=8.0.0,<9.0.0

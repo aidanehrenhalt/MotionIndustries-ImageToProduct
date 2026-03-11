@@ -32,6 +32,8 @@ from elasticsearch.helpers import bulk
 import boto3
 from botocore.exceptions import ClientError
 
+from text_based_search import ProductVector, vector_to_query
+
 # Config
 CHROMEDRIVER_PATH = None # Set path if manually installed, None for using webdriver-manager from pip install
 
@@ -69,6 +71,22 @@ logging.basicConfig(
 )
 log = logging.getLogger("scraper")
 
+# Bridge: convert scraper product dict → ProductVector for query building
+def product_to_vector(product: dict) -> ProductVector:
+    """Convert scraper product dict to ProductVector for text-based query building."""
+    return ProductVector(
+        id_number=product.get("motion_product_id", ""),
+        image_name="",
+        item_number=product.get("item_number", ""),
+        enterprise_number=product.get("enterprise_name", ""),
+        manufacture_name=product.get("mfr_name", ""),
+        manufacture_part_number=product.get("mfr_part_number", ""),
+        web_product_description=product.get("web_desc", ""),
+        motion_internal_desc=product.get("internal_description", ""),
+        pgc=product.get("pgc", ""),
+        pgc_description=product.get("category", ""),
+    )
+
 # Load Product Catalog (from CSV test sample file)
 def load_product_catalog(csv_path: str) -> list[dict]:
     """
@@ -96,37 +114,24 @@ def load_product_catalog(csv_path: str) -> list[dict]:
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                # Generate search query from existing metadata
-                mfr_name = row.get("Manufacturer Name", "").strip()
-                mfr_part_number = row.get("Manufacturer Part Number", "").strip()
-                category = row.get("PGC Description", "").strip()
-                web_desc = row.get("Web Product Description", "").strip()
-
-                # Search keywords: Priorities are MFR Name, MFR #, then Category/Description Context
-                keywords = []
-                if web_desc:
-                    # Primary: First 5 words of web description, strip punctuation
-                    desc_words = web_desc.replace(",", "").replace(".", "").split()
-                    keywords.append(" ".join(desc_words[:5]))
-                if mfr_name and web_desc:
-                    desc_words = web_desc.replace(",", "").replace(".", "").split()
-                    keywords.append(f"{mfr_name} {' '.join(desc_words[:4])}")
-                # If no good keywords, use first 50 chars of web_desc
-                if not keywords and category:
-                    keywords.append(category)
-
-                products.append({
+                # Build product dict from CSV columns
+                product_dict = {
                     "motion_product_id": (row.get("<ID>") or row.get("ID") or "").strip(),
                     "item_number": row.get("Item Number", "").strip(),
                     "enterprise_name": row.get("Enterprise Name", "").strip(),
-                    "mfr_name": mfr_name,
-                    "mfr_part_number": mfr_part_number,
-                    "category": category,
-                    "web_desc": web_desc,
+                    "mfr_name": row.get("Manufacturer Name", "").strip(),
+                    "mfr_part_number": row.get("Manufacturer Part Number", "").strip(),
+                    "category": row.get("PGC Description", "").strip(),
+                    "web_desc": row.get("Web Product Description", "").strip(),
                     "internal_description": row.get("Motion Internal Description", "").strip(),
                     "pgc": row.get("PGC", "").strip(),
-                    "search_keywords": keywords
-                })
+                }
+
+                # Use text_based_search's vector_to_query for optimised keyword generation
+                vector = product_to_vector(product_dict)
+                product_dict["search_keywords"] = [vector_to_query(vector)]
+
+                products.append(product_dict)
 
             log.info(f"Loaded {len(products)} products from {csv_path}")
 

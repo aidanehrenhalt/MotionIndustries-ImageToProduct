@@ -1,3 +1,7 @@
+# Contact @ Motion Industries:
+- anu.shrestha@motion.com
+- george.baldwin@motion.com
+
 # 1. Baseline Project Access
 - Create a dedicated project corresponding to the Image-to-Product pipeline
 - Permissions for viewing project resources and logs
