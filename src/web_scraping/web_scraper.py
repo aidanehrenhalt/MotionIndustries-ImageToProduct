@@ -139,45 +139,40 @@ def load_product_catalog(csv_path: str) -> list[dict]:
     return products
 
 # Selenium Driver (Later for non-API sources)
-def build_driver(driver_path: str = None) -> any:
+def build_driver(driver_path: str = None, headless: bool = True) -> any:
     """
-    Create a Selenium WebDriver instance (for later use with non-API sources)
+    Create a Selenium WebDriver instance for manufacturer website scraping.
 
     Attempts to (in order):
     1. Explicit driver_path argument (manual install)
     2. Use chromedriver from CHROMEDRIVER_PATH
     3. Use webdriver-manager to auto-download chromedriver
-    4. Selenium's built-in selenium-manager)
+    4. Selenium's built-in selenium-manager
 
     Chrome Options:
-    --headless=new : No visible browser window
+    --headless=new : No visible browser window (set headless=False for debugging)
     --no-sandbox : Disable sandboxing (required for some environments)
     --disable-dev-shm-usage : Avoid /dev/shm issues in Docker
     --disable-gpu : Disable GPU acceleration (required for some environments)
     --window-size : 1920,1080 : Set window size for consistent page rendering
-    images prefs disabled : Skip loading image files - Only need DOM metadata for scraping, saves bandwidth and speeds up loading   
     """
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from selenium.webdriver.chrome.service import Service
+
     opts = ChromeOptions()
-    opts.add_argument("--headless=new")
+    if headless:
+        opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")
     opts.add_argument("--disable-dev-shm-usage")
     opts.add_argument("--disable-gpu")
     opts.add_argument("--window-size=1920,1080")
-    opts.add_argument("--disable-blink-features=AutomationControlled") # Avoid detection as bot (probably should remove later)
-
-    # Disable image loading to speed up page loads (only need DOM metadata for scraping)
-    opts.add_experimental_option(
-        "prefs", {"profile.managed_default_content_settings.images": 2}
-    )
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"]) # Avoid detection as bot (probably should remove later)
-    opts.add_experimental_option("useAutomationExtension", False) # Avoid detection as bot (probably should remove later)
 
     resolved_path = driver_path or CHROMEDRIVER_PATH
 
     if resolved_path:
         log.info(f"Using ChromeDriver from path: {resolved_path}")
         service = Service(executable_path=resolved_path)
-        driver = webdriver.Chrome(service=service, options=opts)
         return webdriver.Chrome(service=service, options=opts)
 
     # Try webdriver-manager
@@ -190,7 +185,7 @@ def build_driver(driver_path: str = None) -> any:
         log.warning(f"webdriver-manager failed: {e}, fallback to selenium-manager")
 
     # Final fallback
-    log.info(f"Using Selenium built-in selenium-manager for ChromeDriver")
+    log.info("Using Selenium built-in selenium-manager for ChromeDriver")
     return webdriver.Chrome(options=opts)
 
 ##################################
@@ -404,7 +399,8 @@ def compute_confidence_hints(product: dict, image_meta: dict) -> dict:
     kw_match = any(k in title for k in keywords)
     permissive = any(p in lic for p in ["cc", "public domain", "cc0", "cc by"]) # Add more permissive license indicators as needed
     min_res = (w >= 200 and h >= 200) # Arbitrary minimum resolution threshold for "decent" quality - 200x200 is probably dookie buns but it's temp
-    reliability = ("high" if ("wikimedia" in source or "openverse" in source) 
+    reliability = ("high" if ("wikimedia" in source or "openverse" in source
+                             or "manufacturer site" in source)
                     else "low")
     confidence_score = 0.0
     if kw_match:
@@ -443,7 +439,8 @@ def _dedupe_by_url(images: list[dict]) -> list[dict]:
 # Main Scraping Function
 def scrape_product_images(
     product: dict,
-    # driver: webdriver.Chrome = None, # Lowkey not needed right now, but needed later when expanding to other sources
+    driver=None,
+    enable_mfr_sites: bool = False,
     download_images: bool = True,
     s3_client=None,
 ) -> dict:
@@ -463,7 +460,11 @@ def scrape_product_images(
     for keyword in keywords:
         raw_images += scrape_wikimedia(product, keyword)
         raw_images += scrape_openverse(product, keyword)
-    
+
+    if enable_mfr_sites and driver:
+        from manufacturer_scrapers import scrape_manufacturer_site
+        raw_images += scrape_manufacturer_site(product, driver=driver)
+
     raw_images = _dedupe_by_url(raw_images) # Remove duplicates by URL
     log.info(f"Total unique images found across sources: {len(raw_images)}")
 
@@ -653,6 +654,8 @@ if __name__ == "__main__":
     parser.add_argument("--minio", action="store_true", help="Upload images to MinIO instead of local filesystem")
     parser.add_argument("--minio-endpoint", default=None, help="MinIO endpoint URL (default: env MINIO_ENDPOINT or http://localhost:9000)")
     parser.add_argument("--minio-bucket", default=None, help="MinIO bucket name (default: env MINIO_BUCKET or mi-images)")
+    parser.add_argument("--manufacturer-sites", action="store_true",
+                        help="Enable scraping manufacturer websites via Selenium")
     args = parser.parse_args()
 
     # Load products from CSV
@@ -704,15 +707,36 @@ if __name__ == "__main__":
             log.error("Make sure it's running: docker-compose up -d")
             exit(1)
 
+    # Initialize Selenium driver if manufacturer scraping is enabled
+    driver = None
+    if args.manufacturer_sites:
+        try:
+            driver = build_driver()
+            log.info("Selenium WebDriver initialized for manufacturer site scraping")
+        except Exception as e:
+            log.error(f"Could not init Selenium WebDriver: {e}")
+            log.error("Manufacturer site scraping will be disabled. Install selenium and chromedriver.")
+
     saved_files = []
 
-    for product in products:
-        record = scrape_product_images(product, download_images=not args.no_download, s3_client=s3)
-        saved_path = save_record(record)
-        saved_files.append(saved_path)
-        if es:
-            index_to_elasticsearch(record, es, product)
-        print_summary(record)
+    try:
+        for product in products:
+            record = scrape_product_images(
+                product,
+                driver=driver,
+                enable_mfr_sites=args.manufacturer_sites,
+                download_images=not args.no_download,
+                s3_client=s3,
+            )
+            saved_path = save_record(record)
+            saved_files.append(saved_path)
+            if es:
+                index_to_elasticsearch(record, es, product)
+            print_summary(record)
+    finally:
+        if driver:
+            driver.quit()
+            log.info("Selenium WebDriver closed")
 
     print(f"\nCompleted scraping {len(products)} products. Records saved to:")
     print(f"  JSON   {JSON_DIR.resolve()}")
