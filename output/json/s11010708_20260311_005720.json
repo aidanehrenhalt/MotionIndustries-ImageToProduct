@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:18.677412+00:00",
+  "product": {
+    "motion_product_id": "s11010708",
+    "mfr_name": "DODGE",
+    "mfr_part_number": "TP-40X12-TUFR",
+    "description": "Top Angle Take-Up Frame - Channel Bottom, 12.0000 in Travel, 30.5000 in Length, 4.5000 in Base, 30.5000 in Bolt Center Length",
+    "category": "TAKEUPS & FRAMES"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

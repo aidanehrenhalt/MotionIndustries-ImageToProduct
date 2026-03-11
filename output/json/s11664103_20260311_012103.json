@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:20:49.149898+00:00",
+  "product": {
+    "motion_product_id": "s11664103",
+    "mfr_name": "REXNORD INC",
+    "mfr_part_number": "10177740",
+    "description": "Table Top Chain - Side Flexing, 3.2500 in Flight Width, 1.5000 in Chain Pitch, Acetal Flight Material, Tan Color",
+    "category": "PLASTIC CONVEYING CHAIN"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "OpenVerse / flickr",
+      "OpenVerse / smithsonian_cooper_hewitt_museum"
+    ],
+    "avg_preliminary_score": 0.483
+  },
+  "candidate_images": [
+    {
+      "index": 2,
+      "image_url": "https://ids.si.edu/ids/deliveryService?id=CHSDM-200EE90749FD2-000001",
+      "thumbnail_url": "https://api.openverse.org/v1/images/9c5aa187-0cff-4b0e-a4ce-6cce7ccfbec4/thumb/",
+      "source_page": "https://collection.cooperhewitt.org/view/objects/asitem/id/66104",
+      "source_name": "OpenVerse / smithsonian_cooper_hewitt_museum",
+      "title": "Design for a Surtout de Table (Centerpiece)",
+      "license": "CC0",
+      "attribution": null,
+      "tags": [
+        "1800s",
+        "1820s",
+        "Drawings",
+        "Italy",
+        "Ornaments"
+      ],
+      "width": null,
+      "height": null,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11664103/s11664103_02_3a1cac08.jpg",
+      "file_size_bytes": 722976,
+      "actual_width": 2000,
+      "actual_height": 1761,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:20:49.149898+00:00"
+    },
+    {
+      "index": 0,
+      "image_url": "https://live.staticflickr.com/7230/7283940498_f85244b28c_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/8af81e88-c016-41b1-a582-24f3b6926d98/thumb/",
+      "source_page": "https://www.flickr.com/photos/23165290@N00/7283940498",
+      "source_name": "OpenVerse / flickr",
+      "title": "Bismarck Sapphire Necklace - Smithsonian Museum of Natural History - 2012-05-17",
+      "license": "BY-SA",
+      "attribution": "Tim Evanson",
+      "tags": [
+        "bismarcksapphire",
+        "corundum",
+        "mineral",
+        "sapphire",
+        "smithsonianinstitution",
+        "smithsonianmuseumofnaturalhistory",
+        "washingtondc"
+      ],
+      "width": 781,
+      "height": 1024,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11664103/s11664103_00_093776a8.jpg",
+      "file_size_bytes": 126838,
+      "actual_width": 781,
+      "actual_height": 1023,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:20:49.149898+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://live.staticflickr.com/65535/52841922809_bb1cc3fec1_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/be44dc00-444e-4bff-912e-4a9c07f028c6/thumb/",
+      "source_page": "https://www.flickr.com/photos/198134987@N03/52841922809",
+      "source_name": "OpenVerse / flickr",
+      "title": "Former Sibley & Holmwood Candy Factory (left) and Witkop & Holmes Headquarters (right), Near East Side, Buffalo, September 2019",
+      "license": "BY-SA",
+      "attribution": "Western New York Architecture Deep Cuts",
+      "tags": [],
+      "width": 1024,
+      "height": 768,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11664103/s11664103_01_4e6f4c9a.jpg",
+      "file_size_bytes": 238322,
+      "actual_width": 1024,
+      "actual_height": 768,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:20:49.149898+00:00"
+    }
+  ]
+}

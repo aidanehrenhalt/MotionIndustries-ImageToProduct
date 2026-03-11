@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:19:13.227976+00:00",
+  "product": {
+    "motion_product_id": "s11010708",
+    "mfr_name": "DODGE",
+    "mfr_part_number": "TP-40X12-TUFR",
+    "description": "Top Angle Take-Up Frame - Channel Bottom, 12.0000 in Travel, 30.5000 in Length, 4.5000 in Base, 30.5000 in Bolt Center Length",
+    "category": "TAKEUPS & FRAMES"
+  },
+  "scrape_summary": {
+    "total_images_found": 4,
+    "images_downloaded": 4,
+    "sources_queried": [
+      "Wikimedia Commons",
+      "OpenVerse / flickr"
+    ],
+    "avg_preliminary_score": 0.463
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Hamburg%2C_Elbphilharmonie_--_2023_--_6610_%28bw%29.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Hamburg%2C_Elbphilharmonie_--_2023_--_6610_%28bw%29.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AHamburg%2C%20Elbphilharmonie%20--%202023%20--%206610%20%28bw%29.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Hamburg, Elbphilharmonie -- 2023 -- 6610 (bw).jpg",
+      "license": "cc-by-sa-4.0",
+      "attribution": "<bdi><a href=\"https://www.wikidata.org/wiki/Q34788025\" class=\"extiw\" title=\"d:Q34788025\"><span title=\"German photographer and mathematician\">Dietmar Rabich</span></a></bdi>",
+      "tags": [],
+      "width": 4480,
+      "height": 6720,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11010708/s11010708_00_15f7ac35.jpg",
+      "file_size_bytes": 11027074,
+      "actual_width": 4480,
+      "actual_height": 6720,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:19:13.227976+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://live.staticflickr.com/65535/53072881464_b2866aab29_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/1466cb42-f75d-4a5b-a2ba-0038c039405e/thumb/",
+      "source_page": "https://www.flickr.com/photos/50785054@N03/53072881464",
+      "source_name": "OpenVerse / flickr",
+      "title": "Webb Snaps Highly Detailed Infrared Image of Actively Forming Stars",
+      "license": "BY",
+      "attribution": "James Webb Space Telescope",
+      "tags": [
+        "herbigharo",
+        "hh4647",
+        "jwst",
+        "stars",
+        "webb"
+      ],
+      "width": 1024,
+      "height": 597,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11010708/s11010708_01_7a014b94.jpg",
+      "file_size_bytes": 221134,
+      "actual_width": 1024,
+      "actual_height": 597,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:19:13.227976+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://live.staticflickr.com/5594/15225483531_3b50947ff2_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/d6868391-e898-48af-846a-922248defe42/thumb/",
+      "source_page": "https://www.flickr.com/photos/73228447@N02/15225483531",
+      "source_name": "OpenVerse / flickr",
+      "title": "The Workbench",
+      "license": "BY",
+      "attribution": "Phil Gradwell",
+      "tags": [
+        "5",
+        "jack",
+        "no",
+        "pine",
+        "plane",
+        "shavings",
+        "stanley",
+        "wood",
+        "workbench",
+        "carpentry"
+      ],
+      "width": 1024,
+      "height": 683,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11010708/s11010708_02_c84a2bcd.jpg",
+      "file_size_bytes": 118669,
+      "actual_width": 1024,
+      "actual_height": 683,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:19:13.227976+00:00"
+    },
+    {
+      "index": 3,
+      "image_url": "https://live.staticflickr.com/65535/54407315976_2d2c4be6f1_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/a12a264b-9f50-4a85-bb22-391c2832e9cf/thumb/",
+      "source_page": "https://www.flickr.com/photos/50785054@N03/54407315976",
+      "source_name": "OpenVerse / flickr",
+      "title": "NASA’s Webb Telescope Unmasks True Nature of the Cosmic Tornado",
+      "license": "BY",
+      "attribution": "James Webb Space Telescope",
+      "tags": [],
+      "width": 843,
+      "height": 1024,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11010708/s11010708_03_f2818681.jpg",
+      "file_size_bytes": 174891,
+      "actual_width": 843,
+      "actual_height": 1024,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:19:13.227976+00:00"
+    }
+  ]
+}

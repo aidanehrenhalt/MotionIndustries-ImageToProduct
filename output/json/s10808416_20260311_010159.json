@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:01:58.099167+00:00",
+  "product": {
+    "motion_product_id": "s10808416",
+    "mfr_name": "SKF",
+    "mfr_part_number": "22211 E/C3W64",
+    "description": "Spherical Roller Bearing - 55 mm ID, 100 mm OD, 25 mm Width, Straight Bore, C3",
+    "category": "ST.SM.SPHER.THRU SIZE 48"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

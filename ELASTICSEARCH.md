@@ -119,10 +119,145 @@ without joining back to `mi_products`.
 
 ---
 
-## Useful Queries
+## Querying with Kibana Dev Tools
 
-> **Tip:** You can also run these in Kibana Dev Tools at http://localhost:5601 (go to
-> **Management > Dev Tools**) without needing `curl`.
+Kibana Dev Tools provides an interactive console for running Elasticsearch queries
+without `curl`. This is the easiest way to explore your data.
+
+### Getting Started
+
+1. Open http://localhost:5601 in your browser
+2. Click the **hamburger menu** (☰) in the top-left corner
+3. Scroll down to **Management** and click **Dev Tools**
+4. You'll see a split-pane editor: **left** for requests, **right** for responses
+5. Type a query in the left pane and click the **green play button** (▶) or press **Ctrl+Enter** to execute
+
+### Kibana Query Syntax
+
+In Dev Tools, you omit `curl`, the host, headers, and `-d` flags. Just write the
+HTTP method, path, and JSON body directly:
+
+```
+GET /mi_products/_search
+{
+  "query": { "match_all": {} }
+}
+```
+
+Multiple queries can be stacked in the editor — place your cursor on the one you
+want to run and press **Ctrl+Enter**.
+
+### Common Queries (Kibana format)
+
+**View all products:**
+
+```
+GET /mi_products/_search
+{
+  "query": { "match_all": {} },
+  "size": 50
+}
+```
+
+**Look up a specific product by ID (e.g., `s10807860`):**
+
+```
+GET /mi_products/_doc/s10807860
+```
+
+This returns the single document directly by its `_id`. Use this when you know the
+exact `motion_product_id`.
+
+**Search for a product ID with a query (useful for partial matches):**
+
+```
+GET /mi_products/_search
+{
+  "query": { "term": { "motion_product_id": "s10807860" } }
+}
+```
+
+**View all candidate images for a specific product:**
+
+```
+GET /mi_candidate_images/_search
+{
+  "query": { "term": { "motion_product_id": "s10807860" } },
+  "sort": [{ "confidence_hints.preliminary_score": { "order": "desc" } }]
+}
+```
+
+**Products that have at least one image found:**
+
+```
+GET /mi_products/_search
+{
+  "query": {
+    "range": { "scrape_summary.total_images_found": { "gt": 0 } }
+  }
+}
+```
+
+**Products with no successfully downloaded images:**
+
+```
+GET /mi_products/_search
+{
+  "query": { "term": { "scrape_summary.images_downloaded": 0 } }
+}
+```
+
+**Full-text search across product catalog:**
+
+```
+GET /mi_products/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "spherical roller bearing",
+      "fields": ["description", "mfr_name_text", "category"]
+    }
+  }
+}
+```
+
+**Filter by manufacturer:**
+
+```
+GET /mi_products/_search
+{
+  "query": { "term": { "mfr_name": "SKF" } }
+}
+```
+
+**License distribution (aggregation):**
+
+```
+GET /mi_candidate_images/_search
+{
+  "size": 0,
+  "aggs": { "by_license": { "terms": { "field": "license" } } }
+}
+```
+
+**Check cluster health:**
+
+```
+GET /_cluster/health
+```
+
+**List all indices:**
+
+```
+GET /_cat/indices?v
+```
+
+---
+
+## Useful Queries (curl)
+
+The same queries can be run from the terminal with `curl`. Replace `localhost:9200`
+with your Elasticsearch host if it differs.
 
 **Check cluster health:**
 
@@ -134,6 +269,12 @@ curl 'http://localhost:9200/_cluster/health?pretty'
 
 ```bash
 curl 'http://localhost:9200/_cat/indices?v'
+```
+
+**Look up a specific product by ID:**
+
+```bash
+curl 'http://localhost:9200/mi_products/_doc/s10807860?pretty'
 ```
 
 **Get all images for a product, sorted by confidence score:**

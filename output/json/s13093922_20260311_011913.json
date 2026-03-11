@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:19:02.512420+00:00",
+  "product": {
+    "motion_product_id": "s13093922",
+    "mfr_name": "SKF",
+    "mfr_part_number": "HJ 218 EC",
+    "description": "Cylindrical Roller Bearings - 3.5430 in ID, 4.5000 in OD, 4.5000 in Width",
+    "category": "N,NU,NJ CLASS CYLINDRICAL"
+  },
+  "scrape_summary": {
+    "total_images_found": 2,
+    "images_downloaded": 2,
+    "sources_queried": [
+      "Wikimedia Commons"
+    ],
+    "avg_preliminary_score": 0.525
+  },
+  "candidate_images": [
+    {
+      "index": 1,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Victorian_Railways_R_class_locomotive_No._704_at_the_Newport_Railway_Museum_-_May_2017_-_02.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Victorian_Railways_R_class_locomotive_No._704_at_the_Newport_Railway_Museum_-_May_2017_-_02.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AVictorian%20Railways%20R%20class%20locomotive%20No.%20704%20at%20the%20Newport%20Railway%20Museum%20-%20May%202017%20-%2002.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Victorian Railways R class locomotive No. 704 at the Newport Railway Museum - May 2017 - 02.jpg",
+      "license": "cc-by-2.0",
+      "attribution": "nzsteam",
+      "tags": [],
+      "width": 1800,
+      "height": 1176,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13093922/s13093922_01_d33f116e.jpg",
+      "file_size_bytes": 513728,
+      "actual_width": 1800,
+      "actual_height": 1176,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:19:02.512420+00:00"
+    },
+    {
+      "index": 0,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Steam_Locomotive%2C_Orenstein_%26_Koppel_N%C2%B0_12331_of_1931_0-6-0_Well_Tank_2ft_6in_Gauge.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Steam_Locomotive%2C_Orenstein_%26_Koppel_N%C2%B0_12331_of_1931_0-6-0_Well_Tank_2ft_6in_Gauge.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3ASteam%20Locomotive%2C%20Orenstein%20%26%20Koppel%20N%C2%B0%2012331%20of%201931%200-6-0%20Well%20Tank%202ft%206in%20Gauge.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Steam Locomotive, Orenstein & Koppel N° 12331 of 1931 0-6-0 Well Tank 2ft 6in Gauge.jpg",
+      "license": "pd",
+      "attribution": "Works photo reproduced in an SKF catalogue",
+      "tags": [],
+      "width": 895,
+      "height": 592,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13093922/s13093922_00_35376b52.jpg",
+      "file_size_bytes": 54921,
+      "actual_width": 895,
+      "actual_height": 592,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:19:02.512420+00:00"
+    }
+  ]
+}

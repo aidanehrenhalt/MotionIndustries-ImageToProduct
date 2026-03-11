@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:02:05.128728+00:00",
+  "product": {
+    "motion_product_id": "s11086988",
+    "mfr_name": "MARTIN SPROCKET & GEAR CO",
+    "mfr_part_number": "6HS",
+    "description": "Flex Link-Type Coupling Part - Center Element - Center Element, 6 Cplg Size, Thermoplastic Elastomer",
+    "category": "ELASTOMER CPLGS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

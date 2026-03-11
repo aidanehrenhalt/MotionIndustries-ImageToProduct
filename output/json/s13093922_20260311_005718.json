@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:16.474899+00:00",
+  "product": {
+    "motion_product_id": "s13093922",
+    "mfr_name": "SKF",
+    "mfr_part_number": "HJ 218 EC",
+    "description": "Cylindrical Roller Bearings - 3.5430 in ID, 4.5000 in OD, 4.5000 in Width",
+    "category": "N,NU,NJ CLASS CYLINDRICAL"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:43.791598+00:00",
+  "product": {
+    "motion_product_id": "s11260988",
+    "mfr_name": "BROWNING",
+    "mfr_part_number": "3B5V54",
+    "description": "V-Belt Pulley - A, B, 5V Belt Section, 3 Groove, Bushing Required Bore Size, 5.6800 in O.D., Split Taper Bushed, B Series Bushing, Cast Iron Material",
+    "category": "BROWNING A-E SHEAVES"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

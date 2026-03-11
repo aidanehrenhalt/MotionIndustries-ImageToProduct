@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:20:16.694975+00:00",
+  "product": {
+    "motion_product_id": "s10808416",
+    "mfr_name": "SKF",
+    "mfr_part_number": "22211 E/C3W64",
+    "description": "Spherical Roller Bearing - 55 mm ID, 100 mm OD, 25 mm Width, Straight Bore, C3",
+    "category": "ST.SM.SPHER.THRU SIZE 48"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "Wikimedia Commons"
+    ],
+    "avg_preliminary_score": 0.483
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Westin_Hotel_from_High_Roller%2C_Las_Vegas%2C_Nevada.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Westin_Hotel_from_High_Roller%2C_Las_Vegas%2C_Nevada.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AWestin%20Hotel%20from%20High%20Roller%2C%20Las%20Vegas%2C%20Nevada.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Westin Hotel from High Roller, Las Vegas, Nevada.jpg",
+      "license": "cc-by-sa-2.0",
+      "attribution": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/75683070@N00\">Ken Lund</a>",
+      "tags": [],
+      "width": 4000,
+      "height": 3000,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s10808416/s10808416_00_cdab191d.mpo",
+      "file_size_bytes": 3683626,
+      "actual_width": 4000,
+      "actual_height": 3000,
+      "actual_format": "MPO",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:20:16.694975+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Wingquist_bearing00.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Wingquist_bearing00.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AWingquist%20bearing00.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Wingquist bearing00.jpg",
+      "license": "cc-by-sa-3.0",
+      "attribution": "<a href=\"//commons.wikimedia.org/wiki/User:Androstachys\" title=\"User:Androstachys\">Androstachys</a>",
+      "tags": [],
+      "width": 1652,
+      "height": 1697,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s10808416/s10808416_02_b2ed562c.jpg",
+      "file_size_bytes": 329347,
+      "actual_width": 1652,
+      "actual_height": 1697,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:20:16.694975+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/Ball_bearing_self_aligning.gif",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/Ball_bearing_self_aligning.gif",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3ABall%20bearing%20self%20aligning.gif",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Ball bearing self aligning.gif",
+      "license": "pd",
+      "attribution": "<a href=\"//commons.wikimedia.org/wiki/User:Lidingo\" title=\"User:Lidingo\">Lidingo</a>",
+      "tags": [],
+      "width": 200,
+      "height": 185,
+      "mime_type": "image/gif",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s10808416/s10808416_01_c21b8dfa.gif",
+      "file_size_bytes": 46707,
+      "actual_width": 200,
+      "actual_height": 185,
+      "actual_format": "GIF",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-11T05:20:16.694975+00:00"
+    }
+  ]
+}

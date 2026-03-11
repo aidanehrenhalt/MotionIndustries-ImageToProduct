@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:02:01.613339+00:00",
+  "product": {
+    "motion_product_id": "s11281029",
+    "mfr_name": "RENOLD JEFFREY",
+    "mfr_part_number": "60A1R50 ft RIV",
+    "description": "Roller Chain - Standard Series, 60 / 3/4 in Pitch, Riveted, 1 Strand, Carbon Steel Material, 50 ft Length",
+    "category": "HI-VOLUME ROLLER CHAIN"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

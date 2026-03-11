@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:25.316503+00:00",
+  "product": {
+    "motion_product_id": "s11260993",
+    "mfr_name": "BROWNING",
+    "mfr_part_number": "BK110H",
+    "description": "V-Belt Pulley - 4L, 5L, A, B Belt Section, 1 Groove, Bushing Required Bore Size, 10.7500 in O.D., Split Taper Bushed, H Series Bushing, Cast Iron Material",
+    "category": "BORED TO SIZE FHP SHEAVES"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

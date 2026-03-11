@@ -4,7 +4,7 @@ Safe Sources (ToS Compliance)
 2. OpenVerse API
 
 Setup (Run upon First Time Usage):
-pip install requests beautifulsoup4 Pillow lxml
+pip install requests beautifulsoup4 Pillow lxml - NOTE: These are in requirements.txt, just run pip install -r requirements.txt
 
 For now, no need for Selenium. Focusing on APIs.
 
@@ -87,6 +87,35 @@ def product_to_vector(product: dict) -> ProductVector:
         pgc_description=product.get("category", ""),
     )
 
+def simple_search_keywords(product: dict) -> list[str]:
+    """
+    Generate short, broad search keywords for Wikimedia/OpenVerse.
+
+    Produces 2 queries:
+      1. First 5 words of web description (product type context)
+      2. Manufacturer name + first 4 words of description (brand context)
+
+    Falls back to PGC category if no description is available.
+
+    NOTE: This is a temporary simplified approach for current sources.
+    Switch back to vector_to_query(product_to_vector(product)) once
+    more sources are integrated and can handle detailed queries.
+    """
+    mfr_name = product.get("mfr_name", "").strip()
+    web_desc = product.get("web_desc", "").strip()
+    category = product.get("category", "").strip()
+
+    keywords = []
+    if web_desc:
+        desc_words = web_desc.replace(",", "").replace(".", "").split()
+        keywords.append(" ".join(desc_words[:5]))
+        if mfr_name:
+            keywords.append(f"{mfr_name} {' '.join(desc_words[:4])}")
+    if not keywords and category:
+        keywords.append(category)
+
+    return keywords
+
 # Load Product Catalog (from CSV test sample file)
 def load_product_catalog(csv_path: str) -> list[dict]:
     """
@@ -127,9 +156,10 @@ def load_product_catalog(csv_path: str) -> list[dict]:
                     "pgc": row.get("PGC", "").strip(),
                 }
 
-                # Use text_based_search's vector_to_query for optimised keyword generation
-                vector = product_to_vector(product_dict)
-                product_dict["search_keywords"] = [vector_to_query(vector)]
+                # Temporary: use simple broad keywords for Wikimedia/OpenVerse
+                # TODO: switch to vector_to_query(product_to_vector(product_dict))
+                #       once more sources that handle detailed queries are added
+                product_dict["search_keywords"] = simple_search_keywords(product_dict)
 
                 products.append(product_dict)
 

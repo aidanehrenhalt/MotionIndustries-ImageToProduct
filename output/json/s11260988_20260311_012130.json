@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:21:14.984590+00:00",
+  "product": {
+    "motion_product_id": "s11260988",
+    "mfr_name": "BROWNING",
+    "mfr_part_number": "3B5V54",
+    "description": "V-Belt Pulley - A, B, 5V Belt Section, 3 Groove, Bushing Required Bore Size, 5.6800 in O.D., Split Taper Bushed, B Series Bushing, Cast Iron Material",
+    "category": "BROWNING A-E SHEAVES"
+  },
+  "scrape_summary": {
+    "total_images_found": 1,
+    "images_downloaded": 1,
+    "sources_queried": [
+      "Wikimedia Commons"
+    ],
+    "avg_preliminary_score": 0.4
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/VIEW_NORTH_OF_UPPER_LEVEL_OF_CRUSHER_ADDITION._DINGS_MAGNETIC_PULLEY_AT_CENTER._ALSO_SHOWS_100-TON_CRUSHED_UNOXIDIZED_ORE_BIN_%28RIGHT%29%2C_PULLEY_FORM_18_INCH_BELT_CONVEYOR_CRUSHED_HAER_SD%2C41-LEAD.V%2C1-41.tif",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/VIEW_NORTH_OF_UPPER_LEVEL_OF_CRUSHER_ADDITION._DINGS_MAGNETIC_PULLEY_AT_CENTER._ALSO_SHOWS_100-TON_CRUSHED_UNOXIDIZED_ORE_BIN_%28RIGHT%29%2C_PULLEY_FORM_18_INCH_BELT_CONVEYOR_CRUSHED_HAER_SD%2C41-LEAD.V%2C1-41.tif",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AVIEW%20NORTH%20OF%20UPPER%20LEVEL%20OF%20CRUSHER%20ADDITION.%20DINGS%20MAGNETIC%20PULLEY%20AT%20CENTER.%20ALSO%20SHOWS%20100-TON%20CRUSHED%20UNOXIDIZED%20ORE%20BIN%20%28RIGHT%29%2C%20PULLEY%20FORM%2018%20INCH%20BELT%20CONVEYOR%20CRUSHED%20HAER%20SD%2C41-LEAD.V%2C1-41.tif",
+      "source_name": "Wikimedia Commons",
+      "title": "File:VIEW NORTH OF UPPER LEVEL OF CRUSHER ADDITION. DINGS MAGNETIC PULLEY AT CENTER. ALSO SHOWS 100-TON CRUSHED UNOXIDIZED ORE BIN (RIGHT), PULLEY FORM 18 INCH BELT CONVEYOR CRUSHED HAER SD,41-LEAD.V,1-41.tif",
+      "license": "pd",
+      "attribution": "<div class=\"fn value\">\nElliot, Joseph E.B., creator</div>",
+      "tags": [],
+      "width": 3959,
+      "height": 5000,
+      "mime_type": "image/tiff",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11260988/s11260988_00_3c0152a5.tiff",
+      "file_size_bytes": 19797800,
+      "actual_width": 3959,
+      "actual_height": 5000,
+      "actual_format": "TIFF",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:21:14.984590+00:00"
+    }
+  ]
+}

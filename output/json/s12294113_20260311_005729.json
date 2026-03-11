@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:27.568076+00:00",
+  "product": {
+    "motion_product_id": "s12294113",
+    "mfr_name": "LEESON ELECTRIC",
+    "mfr_part_number": "145TTWR6076AA",
+    "description": "Washdown Duty Motor - 1 hp, 1200 rpm, 3 ph, 230/460 V, 145T Frame, TEFC (Totally Enclosed Fan Cooled) Enclosure, 50/60 Hz, 1170 rpm Base, Rigid Base Mount",
+    "category": "STANDARD STOCK AC MOTORS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

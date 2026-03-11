@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:17:51.797859+00:00",
+  "product": {
+    "motion_product_id": "s10807910",
+    "mfr_name": "Timken",
+    "mfr_part_number": "23076EMBW507C08",
+    "description": "Spherical Roller Bearing - 380 mm ID, 560 mm OD, 135 mm Width, Straight Bore, Open, C0",
+    "category": "ST.MED.SPHER.52 THRU 96"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

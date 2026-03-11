@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T04:57:39.321497+00:00",
+  "product": {
+    "motion_product_id": "s11664103",
+    "mfr_name": "REXNORD INC",
+    "mfr_part_number": "10177740",
+    "description": "Table Top Chain - Side Flexing, 3.2500 in Flight Width, 1.5000 in Chain Pitch, Acetal Flight Material, Tan Color",
+    "category": "PLASTIC CONVEYING CHAIN"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:20:39.262466+00:00",
+  "product": {
+    "motion_product_id": "s11281029",
+    "mfr_name": "RENOLD JEFFREY",
+    "mfr_part_number": "60A1R50 ft RIV",
+    "description": "Roller Chain - Standard Series, 60 / 3/4 in Pitch, Riveted, 1 Strand, Carbon Steel Material, 50 ft Length",
+    "category": "HI-VOLUME ROLLER CHAIN"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 1,
+    "sources_queried": [
+      "OpenVerse / wikimedia",
+      "OpenVerse / flickr"
+    ],
+    "avg_preliminary_score": 0.4
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://live.staticflickr.com/5177/5531995951_7eb5a5a6e7_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/cead7fce-d968-487c-bc89-7eff4172c6a4/thumb/",
+      "source_page": "https://www.flickr.com/photos/45676495@N05/5531995951",
+      "source_name": "OpenVerse / flickr",
+      "title": "8 Wolseley Hornet Saloon (1932)",
+      "license": "BY-SA",
+      "attribution": "robertknight16",
+      "tags": [
+        "1930s",
+        "british",
+        "wolseley"
+      ],
+      "width": 1024,
+      "height": 768,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s11281029/s11281029_00_df7a7a5f.jpg",
+      "file_size_bytes": 289885,
+      "actual_width": 1024,
+      "actual_height": 768,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:20:39.262466+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f7/ABS-5368.0-InternationalTradeInGoodsServicesAustralia-MerchandiseImportsStandardInternationalTradeClassificationCustomsValue-748TransmissionCamShaftsCranksBearingHousingsPlainShaftBearingsGearsGearingBallRollerScrewsGearboxesS-A1828925X.svg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/fd8cfd04-5234-4a61-81db-6fff59c38d07/thumb/",
+      "source_page": "https://commons.wikimedia.org/w/index.php?curid=66548393",
+      "source_name": "OpenVerse / wikimedia",
+      "title": "ABS-5368.0-InternationalTradeInGoodsServicesAustralia-MerchandiseImportsStandardInternationalTradeClassificationCustomsValue-748TransmissionCamShaftsCranksBearingHousingsPlainShaftBearingsGearsGearingBallRollerScrewsGearboxesS-A1828925X",
+      "license": "BY-SA",
+      "attribution": "Toby Hudson",
+      "tags": [],
+      "width": 512,
+      "height": 341,
+      "mime_type": "image/jpeg",
+      "downloaded": false,
+      "storage_type": "minio",
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": "cannot identify image file <_io.BytesIO object at 0x7964041c6d90>",
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:20:39.262466+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/ABS-5439.0-InternationalMerchandiseImportsAustralia-StandardInternationalTradeClassificationCustomsValue-748TransmissionCamShaftsCranksBearingHousingsPlainShaftBearingsGearsGearingBallRollerScrewsGearboxesSpeedChangersTorqueCo-A1828925X.svg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/4003adc2-1285-43c7-9bce-d40a9e637f5a/thumb/",
+      "source_page": "https://commons.wikimedia.org/w/index.php?curid=19513978",
+      "source_name": "OpenVerse / wikimedia",
+      "title": "File:ABS-5439.0-InternationalMerchandiseImportsAustralia-StandardInternationalTradeClassificationCustomsValue-748TransmissionCamShaftsCranksBearingHousingsPlainShaftBearingsGearsGearingBallRollerScrewsGearboxesSpeedChangersTorqueCo-A1828925X.svg",
+      "license": "BY-SA",
+      "attribution": "Toby Hudson",
+      "tags": [],
+      "width": 512,
+      "height": 341,
+      "mime_type": "image/jpeg",
+      "downloaded": false,
+      "storage_type": "minio",
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": "cannot identify image file <_io.BytesIO object at 0x7964041c6570>",
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-11T05:20:39.262466+00:00"
+    }
+  ]
+}

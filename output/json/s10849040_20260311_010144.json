@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:01:43.064226+00:00",
+  "product": {
+    "motion_product_id": "s10849040",
+    "mfr_name": "INA (Schaeffler)",
+    "mfr_part_number": "IR10X13X12,5",
+    "description": "Inner Ring - 10 mm Bore, 13 mm OD, Chrome Steel",
+    "category": "NEEDLE BEARINGS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

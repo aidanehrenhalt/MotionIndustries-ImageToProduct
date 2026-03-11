@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-11T05:17:08.276624+00:00",
+  "product": {
+    "motion_product_id": "s10807860",
+    "mfr_name": "SKF",
+    "mfr_part_number": "21315 E/C3",
+    "description": "Spherical Roller Bearing - 75 mm ID, 160 mm OD, 37 mm Width, Straight Bore, C3",
+    "category": "ST.SM.SPHER.THRU SIZE 48"
+  },
+  "scrape_summary": {
+    "total_images_found": 2,
+    "images_downloaded": 2,
+    "sources_queried": [
+      "Wikimedia Commons"
+    ],
+    "avg_preliminary_score": 0.4
+  },
+  "candidate_images": [
+    {
+      "index": 1,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Wingquist_bearing00.jpg",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Wingquist_bearing00.jpg",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3AWingquist%20bearing00.jpg",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Wingquist bearing00.jpg",
+      "license": "cc-by-sa-3.0",
+      "attribution": "<a href=\"//commons.wikimedia.org/wiki/User:Androstachys\" title=\"User:Androstachys\">Androstachys</a>",
+      "tags": [],
+      "width": 1652,
+      "height": 1697,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s10807860/s10807860_01_b2ed562c.jpg",
+      "file_size_bytes": 329347,
+      "actual_width": 1652,
+      "actual_height": 1697,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": true,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.65
+      },
+      "scraped_at": "2026-03-11T05:17:08.276624+00:00"
+    },
+    {
+      "index": 0,
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/Ball_bearing_self_aligning.gif",
+      "thumbnail_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/Ball_bearing_self_aligning.gif",
+      "source_page": "https://commons.wikimedia.org/wiki/File:File%3ABall%20bearing%20self%20aligning.gif",
+      "source_name": "Wikimedia Commons",
+      "title": "File:Ball bearing self aligning.gif",
+      "license": "pd",
+      "attribution": "<a href=\"//commons.wikimedia.org/wiki/User:Lidingo\" title=\"User:Lidingo\">Lidingo</a>",
+      "tags": [],
+      "width": 200,
+      "height": 185,
+      "mime_type": "image/gif",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s10807860/s10807860_00_c21b8dfa.gif",
+      "file_size_bytes": 46707,
+      "actual_width": 200,
+      "actual_height": 185,
+      "actual_format": "GIF",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-11T05:17:08.276624+00:00"
+    }
+  ]
+}
