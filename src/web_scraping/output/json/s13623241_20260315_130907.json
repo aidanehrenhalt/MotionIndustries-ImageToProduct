@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T17:08:59.848544+00:00",
+  "product": {
+    "motion_product_id": "s13623241",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "UCT204C4HR23",
+    "description": "Take-Up Ball Bearing Unit - 20 mm Bore, Cast Iron Housing, Set Screw Collar",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "Manufacturer Site / AMI BEARINGS INC"
+    ],
+    "avg_preliminary_score": 0.15
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://catalog.amibearings.com/ImgMedium/UCT200C.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgMedium/UCT200C.jpg",
+      "source_page": "https://catalog.amibearings.com/item/take-up-bearing-units-2/g-take-up-unit-with-two-open-covers-uct200c-series/uct204c",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Take-Up Unit With Two Open Covers, UCT200C Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13623241/s13623241_00_7f1e1e6a.jpg",
+      "file_size_bytes": 11760,
+      "actual_width": 200,
+      "actual_height": 109,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:59.848544+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UC200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UC200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/take-up-bearing-units-2/g-take-up-unit-with-two-open-covers-uct200c-series/uct204c",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Bearing Insert, UC200/UCW200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13623241/s13623241_01_6f635783.jpg",
+      "file_size_bytes": 5582,
+      "actual_width": 106,
+      "actual_height": 90,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:59.848544+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UCT200C.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UCT200C.jpg",
+      "source_page": "https://catalog.amibearings.com/item/take-up-bearing-units-2/g-take-up-unit-with-two-open-covers-uct200c-series/uct204c",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Take-Up Unit With Two Open Covers, UCT200C Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13623241/s13623241_02_10c2b7dc.jpg",
+      "file_size_bytes": 5484,
+      "actual_width": 120,
+      "actual_height": 65,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:59.848544+00:00"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-13T16:21:36.397698+00:00",
+  "product": {
+    "motion_product_id": "s10807876",
+    "mfr_name": "NSK",
+    "mfr_part_number": "23038CAMKC3W507",
+    "description": "Spherical Roller Bearing - 190 mm ID, 290 mm OD, 75 mm Width, Tapered 1:12 Bore, Open, C3",
+    "category": "ST.SM.SPHER.THRU SIZE 48"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

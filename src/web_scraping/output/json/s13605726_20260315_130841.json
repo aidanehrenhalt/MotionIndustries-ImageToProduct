@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T17:08:33.718176+00:00",
+  "product": {
+    "motion_product_id": "s13605726",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "UCECH201-8NPMZ20RF",
+    "description": "",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "Manufacturer Site / AMI BEARINGS INC"
+    ],
+    "avg_preliminary_score": 0.15
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://catalog.amibearings.com/ImgMedium/UCECH200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgMedium/UCECH200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/set-screw-locking-9/-screw-locking-hanger-bearing-unit-ucech200-series/ucech201-8",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Hanger Bearing Unit, UCECH200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13605726/s13605726_00_facd4c03.jpg",
+      "file_size_bytes": 8804,
+      "actual_width": 200,
+      "actual_height": 109,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:33.718176+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UC200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UC200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/set-screw-locking-9/-screw-locking-hanger-bearing-unit-ucech200-series/ucech201-8",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Bearing Insert, UC200/UCW200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13605726/s13605726_01_6f635783.jpg",
+      "file_size_bytes": 5582,
+      "actual_width": 106,
+      "actual_height": 90,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:33.718176+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UCECH200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UCECH200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/set-screw-locking-9/-screw-locking-hanger-bearing-unit-ucech200-series/ucech201-8",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Screw Locking Hanger Bearing Unit, UCECH200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13605726/s13605726_02_5169ca07.jpg",
+      "file_size_bytes": 4311,
+      "actual_width": 120,
+      "actual_height": 65,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:33.718176+00:00"
+    }
+  ]
+}

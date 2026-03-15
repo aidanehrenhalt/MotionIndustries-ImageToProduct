@@ -13,3 +13,6 @@ boto3>=1.34
 # Selenium (Manufacturer Website Scraping)
 selenium>=4.0
 webdriver-manager
+
+# Playwright (Tier 2 JS-heavy site rendering — run `playwright install chromium` after pip install)
+playwright>=1.40

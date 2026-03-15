@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-13T16:22:37.604056+00:00",
+  "product": {
+    "motion_product_id": "s10833304",
+    "mfr_name": "Timken",
+    "mfr_part_number": "EE135111DW-90044",
+    "description": "Tapered Roller Bearing Full Assembly - 11.0000 in Bore, 15.5000 in OD, 5.0000 in Cone Width, 2.0000 in Cup Width",
+    "category": "ROLLNECK BEARINGS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

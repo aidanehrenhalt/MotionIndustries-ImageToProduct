@@ -102,15 +102,27 @@ def simple_search_keywords(product: dict) -> list[str]:
     more sources are integrated and can handle detailed queries.
     """
     mfr_name = product.get("mfr_name", "").strip()
-    web_desc = product.get("web_desc", "").strip()
+    # Use web_desc if available; fall back to description (populated by index_to_elasticsearch)
+    web_desc = (product.get("web_desc") or product.get("description") or "").strip()
     category = product.get("category", "").strip()
 
     keywords = []
     if web_desc:
-        desc_words = web_desc.replace(",", "").replace(".", "").split()
-        keywords.append(" ".join(desc_words[:5]))
-        if mfr_name:
-            keywords.append(f"{mfr_name} {' '.join(desc_words[:4])}")
+        # Strip standalone punctuation tokens (e.g. the "-" separator in
+        # "Take-Up Ball Bearing Unit - Cast Iron Housing") while preserving
+        # hyphenated words like "Take-Up".
+        raw_words = web_desc.split()
+        desc_words = [w.strip("-,./\\()[]") for w in raw_words]
+        desc_words = [w for w in desc_words if w][:5]
+        if desc_words:
+            part_number = product.get("mfr_part_number", "").strip()
+            # Query 1: part number + description — most specific, best for
+            # manufacturer Tier 1 and generic search fallback
+            if part_number:
+                keywords.append(f"{part_number} {' '.join(desc_words)}")
+            # Query 2: manufacturer + description — brand context
+            if mfr_name:
+                keywords.append(f"{mfr_name} {' '.join(desc_words[:4])}")
     if not keywords and category:
         keywords.append(category)
 
@@ -140,20 +152,33 @@ def load_product_catalog(csv_path: str) -> list[dict]:
     products = []
 
     try:
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                # Build product dict from CSV columns
+                # Build product dict from CSV columns.
+                # Handles both the test sample (title-case names) and the
+                # full dataset (UPPER_SNAKE names, [<ID>] bracket, PGC4).
                 product_dict = {
-                    "motion_product_id": (row.get("<ID>") or row.get("ID") or "").strip(),
+                    "motion_product_id": (
+                        row.get("[<ID>]") or row.get("<ID>") or row.get("ID") or ""
+                    ).strip(),
                     "item_number": row.get("Item Number", "").strip(),
-                    "enterprise_name": row.get("Enterprise Name", "").strip(),
-                    "mfr_name": row.get("Manufacturer Name", "").strip(),
+                    "enterprise_name": (
+                        row.get("ENTERPRISE_NAME") or row.get("Enterprise Name") or ""
+                    ).strip(),
+                    "mfr_name": (
+                        row.get("MFR_NAME") or row.get("Manufacturer Name") or ""
+                    ).strip(),
                     "mfr_part_number": row.get("Manufacturer Part Number", "").strip(),
-                    "category": row.get("PGC Description", "").strip(),
-                    "web_desc": row.get("Web Product Description", "").strip(),
+                    "category": (
+                        row.get("PGC4 Description") or row.get("PGC Description") or ""
+                    ).strip(),
+                    "web_desc": (
+                        row.get("Web Description") or row.get("Web Product Description") or ""
+                    ).strip(),
                     "internal_description": row.get("Motion Internal Description", "").strip(),
-                    "pgc": row.get("PGC", "").strip(),
+                    "pgc": (row.get("PGC4") or row.get("PGC") or "").strip(),
+                    "primary_image_filename": row.get("PrimaryImageFilename", "").strip(),
                 }
 
                 # Temporary: use simple broad keywords for Wikimedia/OpenVerse
@@ -172,6 +197,59 @@ def load_product_catalog(csv_path: str) -> list[dict]:
         exit(1)
         
     return products
+
+def load_products_from_es(
+    es: Elasticsearch,
+    mfr_filter: str | None = None,
+    enterprise_filter: str | None = None,
+    page_size: int = 500,
+) -> list[dict]:
+    """
+    Query mi_products in Elasticsearch and return matching products as dicts
+    ready for scraping.
+
+    Optional filters:
+      - mfr_filter: match on mfr_name (case-insensitive full-text)
+      - enterprise_filter: match on enterprise_name
+
+    Returns all matching documents using the scroll API (safe for large sets).
+    """
+    must_clauses = []
+    if mfr_filter:
+        must_clauses.append({"match": {"mfr_name": mfr_filter}})
+    if enterprise_filter:
+        must_clauses.append({"match": {"enterprise_name": enterprise_filter}})
+
+    query = {"bool": {"must": must_clauses}} if must_clauses else {"match_all": {}}
+
+    products = []
+    resp = es.search(
+        index="mi_products",
+        query=query,
+        size=page_size,
+        sort=[{"_doc": "asc"}],
+        scroll="2m",
+    )
+    scroll_id = resp.get("_scroll_id")
+
+    try:
+        while True:
+            hits = resp["hits"]["hits"]
+            if not hits:
+                break
+            for hit in hits:
+                src = hit["_source"]
+                # Regenerate search keywords (not stored in ES)
+                src["search_keywords"] = simple_search_keywords(src)
+                products.append(src)
+            resp = es.scroll(scroll_id=scroll_id, scroll="2m")
+    finally:
+        if scroll_id:
+            es.clear_scroll(scroll_id=scroll_id)
+
+    log.info(f"[ES] Loaded {len(products)} products from mi_products")
+    return products
+
 
 # Selenium Driver (Later for non-API sources)
 def build_driver(driver_path: str = None, headless: bool = True) -> any:
@@ -476,6 +554,9 @@ def scrape_product_images(
     product: dict,
     driver=None,
     enable_mfr_sites: bool = False,
+    enable_mfr_scraping: bool = False,
+    enable_tier2: bool = False,
+    mfr_only: bool = False,
     download_images: bool = True,
     s3_client=None,
 ) -> dict:
@@ -492,9 +573,14 @@ def scrape_product_images(
     log.info(f"Using {len(keywords)} search keywords: {keywords}")
 
     raw_images: list[dict] = []
-    for keyword in keywords:
-        raw_images += scrape_wikimedia(product, keyword)
-        raw_images += scrape_openverse(product, keyword)
+    if not mfr_only:
+        for keyword in keywords:
+            raw_images += scrape_wikimedia(product, keyword)
+            raw_images += scrape_openverse(product, keyword)
+
+    if enable_mfr_scraping:
+        from manufacturer_scrapers import scrape_manufacturer_images
+        raw_images += scrape_manufacturer_images(product, enable_tier2=enable_tier2)
 
     if enable_mfr_sites and driver:
         from manufacturer_scrapers import scrape_manufacturer_site
@@ -551,7 +637,7 @@ def scrape_product_images(
             "motion_product_id": product["motion_product_id"],
             "mfr_name": product["mfr_name"],
             "mfr_part_number": product["mfr_part_number"],
-            "description": product["web_desc"],
+            "description": product.get("web_desc") or product.get("description", ""),
             "category": product["category"],
         },
         "scrape_summary": {
@@ -669,7 +755,7 @@ def print_summary(record: dict):
     for img in record["candidate_images"][:3]: # Show top 3 candidates
         downloaded = img["downloaded"]
         score = img["confidence_hints"]["preliminary_score"]
-        status = "Downloaded" if downloaded else f"Download Failed: {img.get('download_error', '')[:45]}"
+        status = "Downloaded" if downloaded else f"Download Failed: {(img.get('download_error') or '')[:45]}"
         print(f" [{score:.2f}] {img['source_name']:42s} {status}")
     print(f"{'='*60}")
 
@@ -679,7 +765,10 @@ if __name__ == "__main__":
         description="Image-to-Product Web Scraper for Motion Industries - GT Senior Design Project",
         epilog="Example Usage: python web_scraper.py --csv test-products_sample.csv --product SKF --no-download",
     )
-    parser.add_argument("--csv", type=str, required=True, help="Path to product catalog CSV file")
+    parser.add_argument("--csv", type=str, default=None, help="Path to product catalog CSV file (mutually exclusive with --from-es)")
+    parser.add_argument("--from-es", action="store_true", help="Pull product list from Elasticsearch mi_products index instead of --csv")
+    parser.add_argument("--mfr-filter", default=None, help="Filter by manufacturer name (used with --from-es)")
+    parser.add_argument("--enterprise-filter", default=None, help="Filter by enterprise name (used with --from-es)")
     parser.add_argument("--product", type=str, default=None, help="Specific product ID or category keyword to scrape")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of products to scrape (for testing)")
     parser.add_argument("--no-download", action="store_true", help="Skip downloading images, only scrape metadata")
@@ -691,28 +780,19 @@ if __name__ == "__main__":
     parser.add_argument("--minio-bucket", default=None, help="MinIO bucket name (default: env MINIO_BUCKET or mi-images)")
     parser.add_argument("--manufacturer-sites", action="store_true",
                         help="Enable scraping manufacturer websites via Selenium")
+    parser.add_argument("--mfr-scraping", action="store_true",
+                        help="Enable Tier 1 manufacturer site scraping (requests+BS4, no browser required)")
+    parser.add_argument("--mfr-tier2", action="store_true",
+                        help="Enable Tier 2 generic og:image fallback for unknown manufacturers (requires Playwright)")
+    parser.add_argument("--mfr-only", action="store_true",
+                        help="Skip Wikimedia/OpenVerse; use only manufacturer scrapers (requires --mfr-scraping)")
     args = parser.parse_args()
 
-    # Load products from CSV
-    products = load_product_catalog(args.csv)
-
-    # Filtering
-    if args.product:
-        kw = args.product.lower()
-        products = [
-            p for p in products if 
-            kw in p["mfr_name"].lower() or 
-            kw in p["category"].lower()
-        ]
-        log.info(f"Filtered products with keyword '{args.product}': {len(products)} remaining")
-    
-    if args.limit:
-        products = products[:args.limit]
-        log.info(f"Limiting to first {args.limit} products for testing")
-    
-    if not products:
-        log.error("No products to scrape after filtering. Exiting.")
-        exit(1)
+    # Validate source: exactly one of --csv or --from-es is required
+    if not args.csv and not args.from_es:
+        parser.error("One of --csv or --from-es is required")
+    if args.csv and args.from_es:
+        parser.error("--csv and --from-es are mutually exclusive")
 
     # Connect to MinIO if requested
     s3 = None
@@ -729,9 +809,9 @@ if __name__ == "__main__":
             log.error("Make sure it's running: docker-compose up -d")
             exit(1)
 
-    # Connect to Elasticsearch if requested
+    # Connect to Elasticsearch if requested (also required for --from-es)
     es = None
-    if args.es:
+    if args.es or args.from_es:
         es_url = f"http://{args.es_host}:{args.es_port}"
         es = Elasticsearch(es_url)
         try:
@@ -741,6 +821,35 @@ if __name__ == "__main__":
             log.error(f"Could not connect to Elasticsearch at {es_url}: {e}")
             log.error("Make sure it's running: docker-compose up -d")
             exit(1)
+
+    # Load products — either from CSV or Elasticsearch
+    if args.from_es:
+        products = load_products_from_es(
+            es,
+            mfr_filter=args.mfr_filter,
+            enterprise_filter=args.enterprise_filter,
+        )
+    else:
+        products = load_product_catalog(args.csv)
+
+    # Keyword filter applies to both CSV and ES modes
+    if args.product:
+        kw = args.product.lower()
+        products = [
+            p for p in products if
+            kw in p.get("mfr_part_number", "").lower() or
+            kw in p.get("mfr_name", "").lower() or
+            kw in p.get("category", "").lower()
+        ]
+        log.info(f"Filtered products with keyword '{args.product}': {len(products)} remaining")
+
+    if args.limit:
+        products = products[:args.limit]
+        log.info(f"Limiting to first {args.limit} products")
+
+    if not products:
+        log.error("No products to scrape after filtering. Exiting.")
+        exit(1)
 
     # Initialize Selenium driver if manufacturer scraping is enabled
     driver = None
@@ -760,6 +869,9 @@ if __name__ == "__main__":
                 product,
                 driver=driver,
                 enable_mfr_sites=args.manufacturer_sites,
+                enable_mfr_scraping=args.mfr_scraping,
+                enable_tier2=args.mfr_tier2,
+                mfr_only=args.mfr_only,
                 download_images=not args.no_download,
                 s3_client=s3,
             )

@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T16:08:18.376148+00:00",
+  "product": {
+    "motion_product_id": "s13637020",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "UKT207+HA2307",
+    "description": "Take-Up Ball Bearing Unit - Cast Iron Housing, Adapter Mounted Collar",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 0,
+    "sources_queried": [
+      "OpenVerse / flickr"
+    ],
+    "avg_preliminary_score": 0.4
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://live.staticflickr.com/4072/4410450012_bcb0d0ff95_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/d54c09ce-6ff0-42d7-b757-563bfa618857/thumb/",
+      "source_page": "https://www.flickr.com/photos/75683070@N00/4410450012",
+      "source_name": "OpenVerse / flickr",
+      "title": "Organ Pipe Cactus National Monument, North Puerto Blanco Scenic Drive (47)",
+      "license": "BY-SA",
+      "attribution": "Ken Lund",
+      "tags": [
+        "arizona",
+        "organpipe",
+        "organpipecactus",
+        "pima"
+      ],
+      "width": 1024,
+      "height": 768,
+      "mime_type": "image/jpeg",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-15T16:08:18.376148+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://live.staticflickr.com/4026/4409675549_88bf558b30_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/443071be-b4ad-4a45-b373-4ac3506deb1c/thumb/",
+      "source_page": "https://www.flickr.com/photos/75683070@N00/4409675549",
+      "source_name": "OpenVerse / flickr",
+      "title": "Organ Pipe Cactus National Monument, North Puerto Blanco Scenic Drive (33)",
+      "license": "BY-SA",
+      "attribution": "Ken Lund",
+      "tags": [
+        "arizona",
+        "organpipe",
+        "organpipecactus",
+        "pima"
+      ],
+      "width": 1024,
+      "height": 768,
+      "mime_type": "image/jpeg",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-15T16:08:18.376148+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://live.staticflickr.com/2740/4410442954_7ebdb42725_b.jpg",
+      "thumbnail_url": "https://api.openverse.org/v1/images/dffcc88e-3f91-46e7-a302-acc46a0eee5c/thumb/",
+      "source_page": "https://www.flickr.com/photos/75683070@N00/4410442954",
+      "source_name": "OpenVerse / flickr",
+      "title": "Organ Pipe Cactus National Monument, North Puerto Blanco Scenic Drive (36)",
+      "license": "BY-SA",
+      "attribution": "Ken Lund",
+      "tags": [
+        "arizona",
+        "organpipe",
+        "organpipecactus",
+        "pima"
+      ],
+      "width": 1024,
+      "height": 768,
+      "mime_type": "image/jpeg",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 0.4
+      },
+      "scraped_at": "2026-03-15T16:08:18.376148+00:00"
+    }
+  ]
+}

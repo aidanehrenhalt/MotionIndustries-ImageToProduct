@@ -57,7 +57,9 @@ PRODUCTS_MAPPINGS = {
             "analyzer": "english",
             "fields":   {"keyword": {"type": "keyword", "ignore_above": 512}},
         },
+        "web_desc":             {"type": "text", "analyzer": "english"},
         "internal_description": {"type": "text", "analyzer": "english"},
+        "primary_image_filename": {"type": "keyword", "index": False},
 
         # ── Category / PGC ────────────────────────────────────────────────────
         "pgc":      {"type": "keyword"},
