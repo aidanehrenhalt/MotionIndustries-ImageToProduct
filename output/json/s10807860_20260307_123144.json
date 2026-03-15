@@ -44,7 +44,8 @@
         "source_reliability": "high",
         "preliminary_score": 0.65
       },
-      "scraped_at": "2026-03-07T17:31:31.596544+00:00"
+      "scraped_at": "2026-03-07T17:31:31.596544+00:00",
+      "predicted_class": 0
     },
     {
       "index": 0,
@@ -73,7 +74,8 @@
         "source_reliability": "high",
         "preliminary_score": 0.15
       },
-      "scraped_at": "2026-03-07T17:31:31.596544+00:00"
+      "scraped_at": "2026-03-07T17:31:31.596544+00:00",
+      "predicted_class": 7
     }
   ]
 }
