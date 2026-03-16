@@ -16,3 +16,9 @@ webdriver-manager
 
 # Playwright (Tier 2 JS-heavy site rendering — run `playwright install chromium` after pip install)
 playwright>=1.40
+
+# Image Classification (CNN model — web_scraper.py --classify flag)
+# Install torch from https://pytorch.org/get-started/locally/ for the correct CUDA/CPU variant.
+# CPU-only example: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+torch>=2.0
+torchvision>=0.15

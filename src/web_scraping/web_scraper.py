@@ -8,8 +8,9 @@ pip install requests beautifulsoup4 Pillow lxml - NOTE: These are in requirement
 
 For now, no need for Selenium. Focusing on APIs.
 
-Usage: 
-python web_scraper.py --csv test-products_sample.csv        # Scrape images for all products listed and download images
+Usage:
+python web_scraper.py --csv test-products_sample.csv                     # Scrape images for all products
+python web_scraper.py --from-es --mfr-filter SKF --es --minio --classify # Full pipeline with classification
 """
 
 import os
@@ -743,6 +744,42 @@ def index_to_elasticsearch(record: dict, es: Elasticsearch, product_row: dict):
     log.info(f"[ES] Product {pid} indexed with scrape_summary")
 
 
+def push_predictions_to_es(json_dir: Path, es: Elasticsearch) -> None:
+    """
+    After classify_json_dir() has written predicted_class into the JSON files,
+    sync those predictions back into the mi_candidate_images Elasticsearch index.
+
+    Uses the same SHA1(product_id:image_url) document-ID scheme as
+    index_to_elasticsearch() so every update lands on the correct document.
+    Documents that no longer exist in ES are silently skipped (ignore 404).
+    """
+    updated = 0
+    for json_file in sorted(json_dir.glob("*.json")):
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        pid = data.get("product", {}).get("motion_product_id", "")
+        for img in data.get("candidate_images", []):
+            if "predicted_class" not in img:
+                continue
+            doc_id = hashlib.sha1(
+                f"{pid}:{img['image_url']}".encode()
+            ).hexdigest()
+            try:
+                es.update(
+                    index="mi_candidate_images",
+                    id=doc_id,
+                    doc={"predicted_class": img["predicted_class"]},
+                )
+                updated += 1
+            except Exception:
+                pass  # 404 or mapping error — skip silently
+
+    log.info(f"[ES] Pushed predicted_class for {updated} images into mi_candidate_images")
+
+
 def print_summary(record: dict):
     product = record["product"]
     summary = record["scrape_summary"]
@@ -786,6 +823,8 @@ if __name__ == "__main__":
                         help="Enable Tier 2 generic og:image fallback for unknown manufacturers (requires Playwright)")
     parser.add_argument("--mfr-only", action="store_true",
                         help="Skip Wikimedia/OpenVerse; use only manufacturer scrapers (requires --mfr-scraping)")
+    parser.add_argument("--classify", action="store_true",
+                        help="Run the CNN image classifier on downloaded images after scraping and push predicted_class to JSON (and ES if --es is set). Requires PyTorch + torchvision.")
     args = parser.parse_args()
 
     # Validate source: exactly one of --csv or --from-es is required
@@ -893,3 +932,34 @@ if __name__ == "__main__":
         print(f"  Images {IMAGES_DIR.resolve()}")
     if es:
         print(f"  Elasticsearch  {es_url} (mi_products + mi_candidate_images)")
+
+    # ── Optional post-scrape classification ───────────────────────────────────
+    if args.classify:
+        # Resolve model path relative to this script's location so it works
+        # regardless of the current working directory.
+        _script_dir = Path(__file__).resolve().parent
+        _model_path = _script_dir.parent / "Image_Classifier" / "trained_model.pth"
+
+        if not _model_path.exists():
+            log.error(
+                f"[classify] trained_model.pth not found at {_model_path}. "
+                "Run from the project root or check that src/Image_Classifier/trained_model.pth exists."
+            )
+        else:
+            try:
+                import importlib.util as _ilu
+                _classifier_file = _script_dir.parent / "Image_Classifier" / "classify_json_images.py"
+                _spec = _ilu.spec_from_file_location("classify_json_images", _classifier_file)
+                _mod = _ilu.module_from_spec(_spec)
+                _spec.loader.exec_module(_mod)
+                log.info("[classify] Running image classifier on downloaded images...")
+                n_classified = _mod.classify_json_dir(JSON_DIR, _model_path)
+                print(f"\n  Classified {n_classified} images (predicted_class written to JSON files)")
+                if es:
+                    push_predictions_to_es(JSON_DIR, es)
+                    print(f"  predicted_class synced to Elasticsearch mi_candidate_images")
+            except ImportError as e:
+                log.error(
+                    f"[classify] Could not import classifier: {e}. "
+                    "Install PyTorch: pip install torch torchvision"
+                )
