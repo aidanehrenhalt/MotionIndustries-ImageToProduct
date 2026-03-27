@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "scraped_at": "2026-03-27T07:14:02.469390+00:00",
+  "scraped_at": "2026-03-27T10:22:21.075877+00:00",
   "product": {
     "motion_product_id": "UCST207-22",
     "mfr_name": "AMI Bearings Inc.",
@@ -19,9 +19,9 @@
   "candidate_images": [
     {
       "index": 0,
-      "image_url": "http://127.0.0.1:43333/assets/images/ucst207-22-1.jpg",
-      "thumbnail_url": "http://127.0.0.1:43333/assets/images/ucst207-22-1.jpg",
-      "source_page": "http://127.0.0.1:43333/products/ucst207-22.html",
+      "image_url": "http://127.0.0.1:46789/assets/images/ucst207-22-1.jpg",
+      "thumbnail_url": "http://127.0.0.1:46789/assets/images/ucst207-22-1.jpg",
+      "source_page": "http://127.0.0.1:46789/products/ucst207-22.html",
       "source_name": "Manufacturer Site / AMI BEARINGS INC",
       "title": "Set Screw Locking Wide Slot Take-Up Unit, UCST200 Series",
       "license": "Manufacturer catalog \u2014 proprietary, internal use only",
@@ -50,7 +50,7 @@
         "source_reliability": "high",
         "preliminary_score": 1.0
       },
-      "scraped_at": "2026-03-27T07:14:02.469390+00:00",
+      "scraped_at": "2026-03-27T10:22:21.075877+00:00",
       "predicted_class": 7
     }
   ]
