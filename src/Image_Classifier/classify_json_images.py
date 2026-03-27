@@ -11,9 +11,11 @@ web_scraper.py via classify_json_dir().
 Usage (standalone):
     python src/Image_Classifier/classify_json_images.py
     python src/Image_Classifier/classify_json_images.py --json-dir output/json --model src/Image_Classifier/trained_model.pth
+    python src/Image_Classifier/classify_json_images.py --es  # also push predictions to Elasticsearch
 """
 
 import io
+import hashlib
 import json
 import os
 import argparse
@@ -304,6 +306,54 @@ def classify_json_dir(json_dir: Path, model_path: Path) -> int:
     return total_classified
 
 
+def push_predictions_to_es(json_dir: Path, es_host: str = "localhost", es_port: int = 9200) -> int:
+    """Push predicted_class values from JSON files into the mi_candidate_images
+    Elasticsearch index.
+
+    Uses the same SHA1(product_id:image_url) document-ID scheme as
+    web_scraper.py so updates land on the correct documents.
+
+    Returns the number of documents updated.
+    """
+    try:
+        from elasticsearch import Elasticsearch
+    except ImportError:
+        log.error("[classifier] elasticsearch package not installed — cannot push to ES")
+        return 0
+
+    es = Elasticsearch(f"http://{es_host}:{es_port}")
+    if not es.ping():
+        log.error(f"[classifier] Cannot reach Elasticsearch at {es_host}:{es_port}")
+        return 0
+
+    updated = 0
+    for json_file in sorted(json_dir.glob("*.json")):
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        pid = data.get("product", {}).get("motion_product_id", "")
+        for img in data.get("candidate_images", []):
+            if "predicted_class" not in img:
+                continue
+            doc_id = hashlib.sha1(
+                f"{pid}:{img['image_url']}".encode()
+            ).hexdigest()
+            try:
+                es.update(
+                    index="mi_candidate_images",
+                    id=doc_id,
+                    doc={"predicted_class": img["predicted_class"]},
+                )
+                updated += 1
+            except Exception:
+                pass  # 404 or mapping error — skip silently
+
+    log.info(f"[classifier] Pushed predicted_class for {updated} images into ES")
+    return updated
+
+
 # ── Standalone entry point ────────────────────────────────────────────────────
 
 def _default_model_path() -> Path:
@@ -339,6 +389,18 @@ if __name__ == "__main__":
         default=_default_model_path(),
         help="Path to trained_model.pth (default: src/Image_Classifier/trained_model.pth)",
     )
+    parser.add_argument(
+        "--es", action="store_true",
+        help="Push predicted_class values to Elasticsearch after classification",
+    )
+    parser.add_argument(
+        "--es-host", default="localhost",
+        help="Elasticsearch host (default: localhost)",
+    )
+    parser.add_argument(
+        "--es-port", type=int, default=9200,
+        help="Elasticsearch port (default: 9200)",
+    )
     args = parser.parse_args()
 
     if not args.model.exists():
@@ -348,3 +410,7 @@ if __name__ == "__main__":
 
     n = classify_json_dir(args.json_dir, args.model)
     print(f"Done — classified {n} images.")
+
+    if args.es:
+        updated = push_predictions_to_es(args.json_dir, args.es_host, args.es_port)
+        print(f"Pushed {updated} predictions to Elasticsearch.")

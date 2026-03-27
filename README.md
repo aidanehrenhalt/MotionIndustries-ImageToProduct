@@ -65,14 +65,14 @@ cd MotionIndustries-ImageToProduct
 docker-compose up -d
 
 # 3. Create Python virtual environment and install dependencies
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 
 # 4. Create Elasticsearch indices
-venv/bin/python src/web_scraping/setup_elasticsearch.py
+.venv/bin/python src/web_scraping/setup_elasticsearch.py
 
 # 5. Run the scraper (small test — 2 products, with ES + MinIO)
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --limit 2 --es --minio
 ```
@@ -126,24 +126,24 @@ Data is persisted in Docker volumes (`esdata`, `miniodata`). Stopping containers
 ## Python Environment
 
 > **Important:** Virtual environments are **not portable** between machines or operating
-> systems. Every team member must create their own `venv` locally after cloning.
+> systems. Every team member must create their own `.venv` locally after cloning.
 
 **macOS / Linux / WSL:**
 
 ```bash
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-python -m venv venv
-venv\Scripts\pip install -r requirements.txt
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
 ```
 
-Use `venv/bin/python` (or `venv\Scripts\python` on Windows) to run scripts. Shell
-activation (`source venv/bin/activate`) works but is optional.
+Use `.venv/bin/python` (or `.venv\Scripts\python` on Windows) to run scripts. Shell
+activation (`source .venv/bin/activate`) works but is optional.
 
 ### Dependencies
 

@@ -28,3 +28,10 @@ numpy<2
 
 # Development / Testing
 pytest>=8.0
+
+# Machine Learning
+pandas
+openpyxl
+#torch
+#torch torchvision
+#Check torch documentation to determine correct installation for torch and torchvision
