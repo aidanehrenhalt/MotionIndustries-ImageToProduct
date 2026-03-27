@@ -1,6 +1,6 @@
 # Integration Plan
 
-Single reference for all planned and in-progress integration work on the Image-to-Product pipeline.
+Single reference for the current implementation status and active integration work on the Image-to-Product pipeline.
 
 ---
 
@@ -15,8 +15,32 @@ Single reference for all planned and in-progress integration work on the Image-t
 
 ---
 
+## Flowchart Alignment
+
+This plan now tracks the implementation against the high-level stages defined in `FlowChartImage-To-Text.md`.
+
+| Flowchart Stage | Current Status | Notes |
+|---|---|---|
+| User provides product input | Implemented | Product/catalog input exists through the current front end and file-driven pipeline entry points. |
+| Input UI processes product data | Implemented through Image Classifier handoff | Front-end work is in place up to the point where product metadata is passed into scraping/classification flows. |
+| Web Scraper gathers candidate content | Implemented | Scraper returns candidate web images and captures website/page text where available. |
+| Image classification stage | Implemented | CNN classification runs in the current pipeline and writes `predicted_class` to JSON and Elasticsearch. |
+| Text analysis stage | In progress | This is the current active workstream. The goal is to score similarity between website text and product text description. |
+| Ranking stage | Pending | Final ranker should combine image-classification output with text-analysis output. |
+| Output review stage | Partial | Front-end flow exists upstream, but ranked review output is not yet integrated end-to-end. |
+| User decision loop | Pending | Approve/reject and next-best-image workflow remains downstream work. |
+
+### Current Program Boundary
+
+- Implemented end-to-end today: front end through Image Classifier.
+- Active implementation focus: Text Analysis Model.
+- Downstream after text analysis: ranking, output review integration, and user decision loop.
+
+---
+
 ## Already In Place
 
+- Front-end flow is implemented through the Image Classifier handoff.
 - Elasticsearch and MinIO are wired into the scraper.
 - `mi_products` and `mi_candidate_images` mappings include `predicted_class`.
 - `web_scraper.py --classify` classifies the current scrape run and syncs predictions to Elasticsearch.
@@ -29,7 +53,76 @@ Single reference for all planned and in-progress integration work on the Image-t
 
 ## Remaining Work
 
-### 1. Replace the Temporary Search Query Builder
+### 1. Text Analysis Model
+
+This is the current active workstream and corresponds to the **Text Analysis Model** stage in the flowchart.
+
+#### Goal
+
+Produce a similarity signal between:
+
+- Website text gathered during scraping
+- Product text supplied from the input/front-end side
+
+The output of this stage should be a per-candidate text relevance score that can be consumed by the ranking stage.
+
+#### Required Inputs
+
+- Website/page text captured by the scraper for each candidate source
+- Product text description from the current product record
+
+#### Expected Output
+
+At minimum, the text-analysis stage should write a normalized similarity field that can later be merged into final ranking. Suggested naming:
+
+- `text_similarity_score`
+
+If intermediate fields are useful for debugging or evaluation, keep them additive and non-breaking.
+
+#### Integration Direction
+
+- Keep this stage independent from the CNN classifier so it can be developed and evaluated separately.
+- Write outputs into the JSON candidate records first.
+- Extend Elasticsearch sync only after the scoring shape is stable.
+- The ranking stage should consume this score alongside classification output.
+
+#### Notes
+
+- `src/web_scraping/text_based_search.py` already exists and is the most likely starting point for the text-analysis path.
+- This stage should reflect the flowchart intent: compare scraped website text against the product text description, not just generate search queries.
+
+#### Implementation Checklist
+
+- [ ] Confirm the source of candidate text for scoring.
+  Use existing candidate/source fields where available, and decide whether text is stored per candidate image, per source page, or only during scrape time.
+- [ ] Define the canonical product text input.
+  Start with `product.description` from the saved JSON record and include `internal_description` if that improves coverage without making the signal noisy.
+- [ ] Define the output schema for this stage.
+  Add `text_similarity_score` to each candidate record, and optionally add a debug field such as `text_similarity_method` or `text_similarity_inputs`.
+- [ ] Choose the first scoring method.
+  Start with a simple, explainable baseline such as normalized token overlap or token-set ratio before moving to embeddings or heavier semantic methods.
+- [ ] Implement a text-scoring helper in the existing text path.
+  The most likely home is [`src/web_scraping/text_based_search.py`](/Users/aceaid/Desktop/GitHub Repos/MotionIndustries-ImageToProduct/src/web_scraping/text_based_search.py), unless a new module is cleaner once scoring logic grows beyond query building.
+- [ ] Normalize text before scoring.
+  Lowercase, trim punctuation noise, normalize whitespace, and preserve high-signal tokens such as manufacturer part numbers and dimensions where possible.
+- [ ] Decide how missing text should behave.
+  Candidates with no usable website/source text should receive a neutral or zero score consistently, without breaking ranking.
+- [ ] Write scores into JSON artifacts first.
+  Update the saved `candidate_images` entries before any Elasticsearch schema or sync changes.
+- [ ] Add Elasticsearch mapping only after the field shape is stable.
+  Extend [`src/web_scraping/setup_elasticsearch.py`](/Users/aceaid/Desktop/GitHub Repos/MotionIndustries-ImageToProduct/src/web_scraping/setup_elasticsearch.py) with `text_similarity_score` once local JSON output is validated.
+- [ ] Extend ES sync after local validation.
+  Update [`src/web_scraping/web_scraper.py`](/Users/aceaid/Desktop/GitHub Repos/MotionIndustries-ImageToProduct/src/web_scraping/web_scraper.py) so `push_predictions_to_es()` also syncs text-analysis output.
+- [ ] Add focused tests for the text-analysis stage.
+  Cover at least: strong text match, weak text match, missing candidate text, and stable JSON writeback behavior.
+- [ ] Validate the score on a small curated sample.
+  Compare a few known-good and known-bad candidates to ensure the score is directionally useful before feeding it into final ranking.
+- [ ] Review baseline heuristics already noted in project docs.
+  [`docs/SourceProductImages.md`](/Users/aceaid/Desktop/GitHub Repos/MotionIndustries-ImageToProduct/docs/SourceProductImages.md#L289) already suggests token-set style text similarity on normalized descriptions plus MPN as one practical starting point.
+
+---
+
+### 2. Replace the Temporary Search Query Builder
 
 Current code still uses `simple_search_keywords()` in:
 
@@ -54,9 +147,9 @@ Reference field mapping:
 
 ---
 
-### 2. Image Ranking
+### 3. Image Ranking
 
-After classification, each candidate image has `predicted_class` (0–7 or -1) stored in JSON and ES, but no re-ranking occurs. Images remain sorted by `preliminary_score`, a heuristic computed at scrape time that does not use classifier output.
+After classification, each candidate image has `predicted_class` (0–7 or -1) stored in JSON and ES, but no re-ranking occurs. Images remain sorted by `preliminary_score`, a heuristic computed at scrape time that does not use classifier output. After the Text Analysis Model is in place, ranking should combine both signals, matching the flowchart design.
 
 #### Goal
 
@@ -64,6 +157,7 @@ Produce a `final_score` and `final_rank` for each candidate image combining:
 
 - Classifier confidence (softmax probability of the predicted class)
 - Whether the predicted class matches the product's expected category
+- Text similarity score from the Text Analysis Model
 - The existing preliminary heuristic score
 
 #### Phase 1 — Expose classifier confidence
@@ -91,17 +185,18 @@ Add `get_expected_classes(product: dict) -> set[int]` — returns the set of cla
 
 #### Phase 3 — Compute final score
 
-Add `compute_final_score(candidate, expected_classes, w_confidence=0.4, w_class_match=0.3, w_preliminary=0.3) -> float` to `classify_json_images.py`.
+Add `compute_final_score(candidate, expected_classes, w_confidence=0.3, w_class_match=0.2, w_text_similarity=0.3, w_preliminary=0.2) -> float` to `classify_json_images.py`.
 
 Formula:
 
 ```
-final_score = 0.4 * classifier_confidence
-            + 0.3 * class_match        # 1.0 if predicted_class ∈ expected_classes, else 0.0
-            + 0.3 * preliminary_score
+final_score = 0.3 * classifier_confidence
+            + 0.2 * class_match        # 1.0 if predicted_class ∈ expected_classes, else 0.0
+            + 0.3 * text_similarity_score
+            + 0.2 * preliminary_score
 ```
 
-When `expected_classes` is empty (unknown PGC), redistribute the 0.3 class-match weight equally between the other two signals so the score remains on a 0–1 scale.
+When `expected_classes` is empty (unknown PGC), redistribute the class-match weight across the remaining signals so the score remains on a 0–1 scale.
 
 Weights are a starting point — see open questions below before using on production data.
 
@@ -116,6 +211,7 @@ New fields added to each item in the `candidate_images` array:
 | Field | Type | Set by | Null before ranking |
 |---|---|---|---|
 | `classifier_confidence` | float 0–1 | Phase 1 | yes |
+| `text_similarity_score` | float 0–1 | Text Analysis Model | yes |
 | `final_score` | float 0–1 | Phase 3 | yes |
 | `final_rank` | int ≥ 1 | Phase 4 | yes |
 
@@ -123,6 +219,7 @@ New fields added to each item in the `candidate_images` array:
 
 ```python
 "classifier_confidence": {"type": "float"},
+"text_similarity_score": {"type": "float"},
 "final_score":           {"type": "float"},
 "final_rank":            {"type": "integer"},
 ```
@@ -131,7 +228,7 @@ Existing deployments must run `python setup_elasticsearch.py --recreate`.
 
 #### Phase 6 — Extend ES sync
 
-**`web_scraper.py`** → `push_predictions_to_es()`: sync `classifier_confidence`, `final_score`, and `final_rank` alongside `predicted_class`.
+**`web_scraper.py`** → `push_predictions_to_es()`: sync `classifier_confidence`, `text_similarity_score`, `final_score`, and `final_rank` alongside `predicted_class`.
 
 #### Phase 7 — Demo pipeline
 
@@ -144,21 +241,22 @@ Phases 1–4 can be developed and tested against local JSON files without touchi
 #### Open questions
 
 - **PGC mapping coverage**: before weighting class-match heavily, verify what fraction of products in the test CSV have a PGC that maps to a known class. If coverage is below 50%, reduce `w_class_match`.
-- **Weight calibration**: 0.4 / 0.3 / 0.3 is a starting guess. Spot-check `final_rank == 1` images from demo pipeline runs against the expected product image. Adjust before using on production data.
+- **Weight calibration**: 0.3 / 0.2 / 0.3 / 0.2 is a starting guess for classifier confidence, class match, text similarity, and preliminary score. Spot-check `final_rank == 1` images from demo pipeline runs against the expected product image. Adjust before using on production data.
 - **Model calibration**: if the CNN produces high confidence on wrong classes, reduce `w_confidence` and treat it as a tiebreaker until the model is re-evaluated on held-out data.
 - **Rodrigo collaboration**: confidence scoring and weight calibration were flagged as a task to coordinate with Rodrigo. Loop him in before finalizing.
 
 ---
 
-### 3. Validate End-To-End Behavior
+### 4. Validate End-To-End Behavior
 
-After ranking integration:
+After text-analysis and ranking integration:
 
 1. Run a small CSV scrape: `web_scraper.py --csv ... --es --classify`
 2. Run a `--from-es` scrape: `web_scraper.py --from-es --es --minio --classify`
-3. Confirm JSON output, Elasticsearch documents, and MinIO objects are consistent
-4. Verify `final_rank == 1` images look correct for a sample of products
-5. Compare ranking output against the old heuristic ordering
+3. Confirm text-analysis fields are written to JSON as expected
+4. Confirm JSON output, Elasticsearch documents, and MinIO objects are consistent
+5. Verify `final_rank == 1` images look correct for a sample of products
+6. Compare ranking output against the old heuristic ordering
 
 ---
 
@@ -243,5 +341,5 @@ Contact: anu.shrestha@motion.com, george.baldwin@motion.com
 ## Out Of Scope
 
 - New storage backends beyond MinIO / GCP Cloud Storage
-- UI work
+- Additional UI work beyond the current front-end flow through Image Classifier handoff
 - Model retraining
