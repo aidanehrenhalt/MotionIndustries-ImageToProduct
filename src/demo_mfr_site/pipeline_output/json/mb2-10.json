@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-27T07:14:02.452576+00:00",
+  "product": {
+    "motion_product_id": "MB2-10",
+    "mfr_name": "AMI Bearings Inc.",
+    "mfr_part_number": "MB2-10",
+    "description": "Stainless Steel Set Screw Locking Bearing Insert, MB200 Series",
+    "category": "Teel Set Screw Locking Bearing Insert Mb200 Series"
+  },
+  "scrape_summary": {
+    "total_images_found": 1,
+    "images_downloaded": 1,
+    "sources_queried": [
+      "Manufacturer Site / AMI BEARINGS INC"
+    ],
+    "avg_preliminary_score": 1.0
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "http://127.0.0.1:43333/assets/images/mb2-10-1.jpg",
+      "thumbnail_url": "http://127.0.0.1:43333/assets/images/mb2-10-1.jpg",
+      "source_page": "http://127.0.0.1:43333/products/mb2-10.html",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Stainless Steel Set Screw Locking Bearing Insert, MB200 Series",
+      "license": "Manufacturer catalog \u2014 proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [
+        "Catalog",
+        "Spherical O D Set Screw Stainless Steel Inserts",
+        "Teel Set Screw Locking Bearing Insert Mb200 Series",
+        "MB2-10"
+      ],
+      "width": null,
+      "height": null,
+      "mime_type": "image/jpeg",
+      "downloaded": true,
+      "storage_type": "local",
+      "local_path": "src/demo_mfr_site/pipeline_output/images/mb2-10.jpg",
+      "file_size_bytes": 22633,
+      "actual_width": 200,
+      "actual_height": 170,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": true,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": true,
+        "source_reliability": "high",
+        "preliminary_score": 1.0
+      },
+      "scraped_at": "2026-03-27T07:14:02.452576+00:00",
+      "predicted_class": 0
+    }
+  ]
+}
