@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent
 PROJECT_ROOT = ROOT.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src" / "Image_Classifier"))
 
-from classify_json_images import classify_json_files
+from classify_json_images import classify_json_files, rank_json_files, apply_final_ranking
 
 
 SITE_DIR = ROOT / "site"
@@ -192,7 +192,12 @@ def main() -> None:
             json_path.write_text(json.dumps(record, indent=2), encoding="utf-8")
             saved_json_files.append(json_path)
 
+        # Pass 1 — CNN classifier (writes predicted_class + classifier_confidence)
         classify_json_files(saved_json_files, MODEL_PATH)
+        # Pass 2 — text/metadata ranker (writes ranker_score + score_breakdown)
+        rank_json_files(saved_json_files)
+        # Pass 3 — combine both signals into final_score + final_rank
+        apply_final_ranking(saved_json_files)
 
         summary = {
             "products_processed": len(saved_json_files),

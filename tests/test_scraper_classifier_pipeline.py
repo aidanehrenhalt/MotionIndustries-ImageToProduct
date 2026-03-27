@@ -201,3 +201,20 @@ def test_missing_minio_object_warns_and_continues(tmp_path, caplog):
 
     data = json.loads(json_file.read_text())
     assert "predicted_class" not in data["candidate_images"][0]
+
+
+# ── Test 6: classifier_confidence is written alongside predicted_class ─────────
+
+def test_classifier_confidence_is_written(tmp_path):
+    """Phase 1: classify_json_files must write classifier_confidence alongside predicted_class."""
+    json_file, _ = _write_local_record(tmp_path, "CONF001", "conf.jpg")
+
+    with patch.object(cji, "load_model", return_value=_mock_model(2)), \
+         patch.object(cji, "make_preprocess", return_value=cji.make_preprocess()):
+        cji.classify_json_files([json_file], Path("dummy_model.pth"))
+
+    data = json.loads(json_file.read_text())
+    candidate = data["candidate_images"][0]
+    assert candidate["predicted_class"] == 2
+    assert "classifier_confidence" in candidate
+    assert 0.0 <= candidate["classifier_confidence"] <= 1.0
