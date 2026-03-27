@@ -66,13 +66,13 @@ docker-compose up -d
 
 # 3. Create Python virtual environment and install dependencies
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+..venv/bin/pip install -r requirements.txt
 
 # 4. Create Elasticsearch indices
-.venv/bin/python src/web_scraping/setup_elasticsearch.py
+..venv/bin/python src/web_scraping/setup_elasticsearch.py
 
 # 5. Run the scraper (small test — 2 products, with ES + MinIO)
-.venv/bin/python src/web_scraping/web_scraper.py \
+..venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --limit 2 --es --minio
 ```
@@ -132,7 +132,7 @@ Data is persisted in Docker volumes (`esdata`, `miniodata`). Stopping containers
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+..venv/bin/pip install -r requirements.txt
 ```
 
 **Windows (PowerShell):**
@@ -142,8 +142,8 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 ```
 
-Use `.venv/bin/python` (or `.venv\Scripts\python` on Windows) to run scripts. Shell
-activation (`source .venv/bin/activate`) works but is optional.
+Use `..venv/bin/python` (or `.venv\Scripts\python` on Windows) to run scripts. Shell
+activation (`source ..venv/bin/activate`) works but is optional.
 
 ### Dependencies
 
@@ -166,10 +166,10 @@ Elasticsearch stores all product and image metadata in two indices.
 
 ```bash
 # Create indices (skips if they already exist)
-venv/bin/python src/web_scraping/setup_elasticsearch.py
+.venv/bin/python src/web_scraping/setup_elasticsearch.py
 
 # Recreate indices (drops and rebuilds — destroys existing data)
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
 ```
 
 You must `--recreate` if the field mappings in `setup_elasticsearch.py` have changed, since
@@ -506,13 +506,13 @@ curl -X GET 'http://localhost:9200/mi_candidate_images/_search?pretty' \
 **Create indices** (skips if they already exist):
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py
+.venv/bin/python src/web_scraping/setup_elasticsearch.py
 ```
 
 **Recreate indices** (drops and rebuilds — destroys all data):
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
 ```
 
 > You must recreate indices if the mapping in `setup_elasticsearch.py` has changed since
@@ -537,19 +537,19 @@ Open http://localhost:9001, log in with `minioadmin` / `minioadmin`, and browse 
 
 ```bash
 # Show images for a product (with presigned download URLs)
-venv/bin/python src/web_scraping/minio_es_match.py --product s10807860
+.venv/bin/python src/web_scraping/minio_es_match.py --product s10807860
 
 # Download a product's images from MinIO to local disk
-venv/bin/python src/web_scraping/minio_es_match.py --download s10807860
+.venv/bin/python src/web_scraping/minio_es_match.py --download s10807860
 
 # List all objects in the bucket
-venv/bin/python src/web_scraping/minio_es_match.py --list-bucket
+.venv/bin/python src/web_scraping/minio_es_match.py --list-bucket
 
 # Verify MinIO and ES are in sync (detect orphaned/missing files)
-venv/bin/python src/web_scraping/minio_es_match.py --verify
+.venv/bin/python src/web_scraping/minio_es_match.py --verify
 
 # Storage stats (combined MinIO + ES)
-venv/bin/python src/web_scraping/minio_es_match.py --stats
+.venv/bin/python src/web_scraping/minio_es_match.py --stats
 ```
 
 **3. Programmatic access (presigned URLs)**
@@ -595,7 +595,7 @@ MinIO settings can be overridden via environment variables or CLI flags:
 ## Running the Scraper
 
 ```bash
-venv/bin/python src/web_scraping/web_scraper.py --csv <path_to_csv> [options]
+.venv/bin/python src/web_scraping/web_scraper.py --csv <path_to_csv> [options]
 ```
 
 ### Required Arguments
@@ -622,21 +622,21 @@ venv/bin/python src/web_scraping/web_scraper.py --csv <path_to_csv> [options]
 
 ```bash
 # Scrape all 20 test products, save images locally, no ES
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv
 
 # Scrape 3 products, upload to MinIO, index to ES
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --limit 3 --es --minio
 
 # Scrape only SKF products, metadata only (no image download)
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --product SKF --no-download
 
 # Full pipeline with all options
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --es --minio --limit 5
 ```
@@ -711,7 +711,7 @@ Both indices use `dynamic: "strict"`. Elasticsearch will **reject any document t
   the error count (e.g., `Indexed 0 candidate images for s10807860 (2 errors)`) but does
   not abort — other products continue processing.
 - To fix: update the mapping in `setup_elasticsearch.py`, then run
-  `venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate` and re-scrape.
+  `.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate` and re-scrape.
 
 Why strict mode? Permissive (`dynamic: true`) would silently accept typos or unexpected
 fields and auto-create mappings with potentially wrong types. Strict mode catches these

@@ -352,13 +352,13 @@ mi_products (ES)  1───*  mi_candidate_images (ES)
 **Create indices** (skips if they already exist):
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py
+.venv/bin/python src/web_scraping/setup_elasticsearch.py
 ```
 
 **Recreate indices** (drops and rebuilds — destroys all data):
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
 ```
 
 > You must recreate indices if the mapping in `setup_elasticsearch.py` has changed since

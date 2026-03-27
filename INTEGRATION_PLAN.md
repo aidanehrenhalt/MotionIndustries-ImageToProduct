@@ -18,7 +18,7 @@ Elasticsearch will **reject any document that contains a field not defined in th
   the error count (e.g., `Indexed 0 candidate images for s10807860 (2 errors)`) but does
   not abort — other products continue processing.
 - To fix: update the mapping in `setup_elasticsearch.py`, then run
-  `venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate` and re-scrape.
+  `.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate` and re-scrape.
 
 ### Why strict mode?
 

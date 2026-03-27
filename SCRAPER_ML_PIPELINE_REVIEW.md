@@ -17,12 +17,6 @@ This review focuses on the handoff between:
 - Static contract review between classifier output and Elasticsearch mappings
 - Existing repository artifacts under `output/json/` and `src/web_scraping/output/json/`
 
-## Environment limits during this review
-
-- `torch` and `torchvision` are not installed in the current environment, so the classifier could not be executed here
-- `pytest` is not installed in the current environment, so repository tests were not executed here
-- Docker services and live network scraping were not exercised in this pass
-
 ## Summary
 
 The repository structure is generally coherent, and the JSON schema, classifier output shape, and Elasticsearch mapping for `predicted_class` are aligned. The main integration problem is that the documented "full pipeline" path does not actually work when images are stored in MinIO: the classifier only reads local files and explicitly skips MinIO-backed images.
@@ -183,10 +177,10 @@ These steps reflect the current repository behavior accurately.
 1. Create and activate a virtual environment.
 
 ```bash
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-venv/bin/pip install pytest
-venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install pytest
+.venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
 2. Start infrastructure services.
@@ -198,7 +192,7 @@ docker-compose up -d
 3. Create Elasticsearch indices.
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
 ```
 
 4. Run a small scrape with local image storage and classification enabled.
@@ -209,7 +203,7 @@ Important:
 - This is the current code path that can actually classify images end-to-end.
 
 ```bash
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --limit 2 \
   --es \
@@ -238,7 +232,7 @@ curl -X GET 'http://localhost:9200/mi_candidate_images/_search?pretty' \
 7. Run existing scraper unit tests once `pytest` is installed.
 
 ```bash
-venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
+.venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
 ```
 
 ### B. MinIO path: valid for storage/indexing, not valid for classification in the current code
@@ -246,7 +240,7 @@ venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
 1. Run the scraper with MinIO enabled.
 
 ```bash
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --csv src/web_scraping/test_products_sample.csv \
   --limit 2 \
   --es \
@@ -256,13 +250,13 @@ venv/bin/python src/web_scraping/web_scraper.py \
 2. Verify storage and metadata consistency.
 
 ```bash
-venv/bin/python src/web_scraping/minio_es_match.py --verify
+.venv/bin/python src/web_scraping/minio_es_match.py --verify
 ```
 
 3. If you want to classify these MinIO-backed images with the repository as it exists today, first download them back to local disk.
 
 ```bash
-venv/bin/python src/web_scraping/minio_es_match.py --download s10807860
+.venv/bin/python src/web_scraping/minio_es_match.py --download s10807860
 ```
 
 Important:
@@ -309,32 +303,32 @@ Infrastructure:
 
 Environment setup:
 
-- Installed `torch` and `torchvision` into the project `venv`
+- Installed `torch` and `torchvision` into the project `.venv`
 - Installed a PyTorch-compatible NumPy version:
 
 ```bash
-venv/bin/python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-venv/bin/python -m pip install 'numpy<2'
+.venv/bin/python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+.venv/bin/python -m pip install 'numpy<2'
 ```
 
 Schema and ingest:
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
-venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
 ```
 
 Automated tests:
 
 ```bash
-venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
-venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
+.venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
+.venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
 ```
 
 Live pipeline run:
 
 ```bash
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --from-es \
   --limit 2 \
   --es \
@@ -357,7 +351,7 @@ Positive-path MinIO-backed classification validation:
 Command:
 
 ```bash
-venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
+.venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
 ```
 
 Result:
@@ -385,7 +379,7 @@ Observed state:
 Command:
 
 ```bash
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
 ```
 
 Result:
@@ -398,7 +392,7 @@ Result:
 Command:
 
 ```bash
-venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
+.venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
 ```
 
 Observed behavior:
@@ -416,7 +410,7 @@ Interpretation:
 Command:
 
 ```bash
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/web_scraper.py \
   --from-es \
   --limit 2 \
   --es \
@@ -480,7 +474,7 @@ This is now documented in dependencies so a clean setup reproduces the working e
 Command:
 
 ```bash
-venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
+.venv/bin/python -m pytest -q src/web_scraping/test_manufacturer_scrapers.py
 ```
 
 Result:
@@ -504,7 +498,7 @@ Interpretation:
 Command:
 
 ```bash
-venv/bin/python src/web_scraping/minio_es_match.py --verify
+.venv/bin/python src/web_scraping/minio_es_match.py --verify
 ```
 
 Observed behavior:
@@ -657,10 +651,10 @@ Recommended patch:
 Recommended commands:
 
 ```bash
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-venv/bin/pip install pytest
-venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install pytest
+.venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 ```
 
 If the team uses Apple Silicon, Linux CUDA, or another target, document the exact supported install commands per platform.
@@ -681,9 +675,9 @@ Required validation steps after patching:
 
 ```bash
 docker-compose up -d
-venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
-venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
-venv/bin/python src/web_scraping/web_scraper.py \
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+.venv/bin/python src/web_scraping/ingest_catalog.py --csv src/web_scraping/test_products_sample.csv
+.venv/bin/python src/web_scraping/web_scraper.py \
   --from-es \
   --limit 2 \
   --es \
@@ -702,7 +696,7 @@ Verification commands:
 
 ```bash
 rg -n "predicted_class" output/json
-venv/bin/python src/web_scraping/minio_es_match.py --verify
+.venv/bin/python src/web_scraping/minio_es_match.py --verify
 curl -X GET 'http://localhost:9200/mi_candidate_images/_search?pretty' \
   -H 'Content-Type: application/json' \
   -d '{
