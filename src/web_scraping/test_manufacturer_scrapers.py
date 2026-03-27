@@ -9,6 +9,8 @@ from manufacturer_scrapers import (
     check_robots_txt,
     _build_product_url,
     _extract_images_from_html,
+    _extract_base_slug,
+    _find_item_url_in_series_page,
     scrape_manufacturer_site,
     scrape_manufacturer_images,
     MANUFACTURER_REGISTRY,
@@ -199,17 +201,17 @@ class TestTier1Registry:
     """Test Tier 1 registry entries have correct structure."""
 
     def test_ami_registry_approved(self):
-        """AMI Bearings entry should be approved with requests renderer."""
+        """AMI Bearings entry should be approved with ddg_item renderer."""
         config = MANUFACTURER_REGISTRY["ami bearings inc"]
         assert config["approved"] is True
-        assert config["renderer"] == "requests"
+        assert config["renderer"] == "ddg_item"
         assert len(config["image_selectors"]) > 0
 
     def test_ntn_registry_approved(self):
-        """NTN entry should be approved with requests renderer."""
+        """NTN entry should be approved with ddg_item renderer."""
         config = MANUFACTURER_REGISTRY["ntn"]
         assert config["approved"] is True
-        assert config["renderer"] == "requests"
+        assert config["renderer"] == "ddg_item"
 
     def test_timken_registry_not_approved(self):
         """Timken is not approved: /keyword/ path is disallowed by robots.txt."""
@@ -375,19 +377,15 @@ class TestScrapeManufacturerImages:
         product = {"mfr_name": "TOTALLY UNKNOWN CORP", "mfr_part_number": "X999"}
         assert scrape_manufacturer_images(product, enable_tier2=False) == []
 
-    @patch("manufacturer_scrapers.requests.get")
-    @patch("manufacturer_scrapers.check_robots_txt", return_value=True)
-    def test_tier1_ami_calls_requests(self, mock_robots, mock_get):
-        """Approved Tier 1 entry (AMI) should use requests, not Selenium."""
-        mock_resp = MagicMock()
-        mock_resp.text = '<html><body><a href="/Asset/UCT300.jpg">img</a></body></html>'
-        mock_resp.raise_for_status.return_value = None
-        mock_get.return_value = mock_resp
+    @patch("manufacturer_scrapers._scrape_ddg_item")
+    def test_tier1_ami_calls_ddg_item(self, mock_ddg):
+        """Approved Tier 1 entry (AMI) should dispatch to _scrape_ddg_item, not Selenium."""
+        mock_ddg.return_value = [{"image_url": "https://catalog.amibearings.com/Asset/UCT300.jpg", "_source_fn": "manufacturer_tier1"}]
 
         product = {"mfr_name": "AMI BEARINGS INC", "mfr_part_number": "UCT300", "motion_product_id": "t1"}
         images = scrape_manufacturer_images(product)
+        assert mock_ddg.called
         assert len(images) == 1
-        assert mock_get.called
         assert images[0]["_source_fn"] == "manufacturer_tier1"
 
     @patch("manufacturer_scrapers._scrape_tier2_generic")
@@ -405,6 +403,86 @@ class TestScrapeManufacturerImages:
             with patch("builtins.__import__", side_effect=ImportError("No module named 'playwright'")):
                 result = scrape_manufacturer_images(product, enable_tier2=True)
         assert result == []
+
+
+class TestExtractBaseSlug:
+    """Test _extract_base_slug strips trailing letter suffix codes (clears, seals, etc.)
+    while preserving the bore code (hyphen + digits) when present."""
+
+    def test_plain_part_number(self):
+        assert _extract_base_slug("UCT305") == "uct305"
+
+    def test_bore_suffix_preserved(self):
+        # Bore code "-16" is kept; catalog matching uses bore_stripped fallback
+        assert _extract_base_slug("UCT305-16") == "uct305-16"
+
+    def test_letter_suffix_stripped(self):
+        # Clearance/sealing codes after digits are stripped
+        assert _extract_base_slug("UCT204C4HR23") == "uct204"
+
+    def test_bore_preserved_letter_suffix_stripped(self):
+        # Bore "-8" preserved; trailing letter "B" stripped
+        assert _extract_base_slug("UCHPL201-8B") == "uchpl201-8"
+
+    def test_bore_preserved_material_suffix_stripped(self):
+        # Bore "-14" preserved; trailing material codes "RFCW" stripped
+        assert _extract_base_slug("MUCHPL205-14RFCW") == "muchpl205-14"
+
+
+class TestFindItemUrlInSeriesPage:
+    """Test slug matching logic in _find_item_url_in_series_page."""
+
+    AMI_BASE_URL = "https://catalog.amibearings.com"
+    VIEWITEMS_URL = (
+        "https://catalog.amibearings.com/viewitems/set-screw-locking-8/"
+        "set-screw-locking-take-up-unit-uct300-series"
+    )
+    # Minimal series page HTML: three size variants, no bore codes in slugs
+    SERIES_HTML = """
+    <html><body>
+      <a href="/item/set-screw-locking-8/set-screw-locking-take-up-unit-uct300-series/uct304">UCT304</a>
+      <a href="/item/set-screw-locking-8/set-screw-locking-take-up-unit-uct300-series/uct305">UCT305</a>
+      <a href="/item/set-screw-locking-8/set-screw-locking-take-up-unit-uct300-series/uct306">UCT306</a>
+    </body></html>
+    """
+
+    def _mock_fetch(self, html):
+        """Return a patch context that makes _fetch_with_requests return *html*."""
+        return patch("manufacturer_scrapers._fetch_with_requests", return_value=html)
+
+    def test_bore_stripped_match(self):
+        """UCT305-16: catalog slug 'uct305' should match via bore-stripped fallback."""
+        with self._mock_fetch(self.SERIES_HTML):
+            url = _find_item_url_in_series_page(
+                self.AMI_BASE_URL, "UCT305-16", self.VIEWITEMS_URL
+            )
+        assert url is not None
+        assert url.endswith("/uct305")
+
+    def test_exact_part_match(self):
+        """UCT305 (no bore suffix): exact part_lc match against 'uct305' slug."""
+        with self._mock_fetch(self.SERIES_HTML):
+            url = _find_item_url_in_series_page(
+                self.AMI_BASE_URL, "UCT305", self.VIEWITEMS_URL
+            )
+        assert url is not None
+        assert url.endswith("/uct305")
+
+    def test_no_match_returns_none(self):
+        """Part not listed on the series page returns None."""
+        with self._mock_fetch(self.SERIES_HTML):
+            url = _find_item_url_in_series_page(
+                self.AMI_BASE_URL, "UCT399-24", self.VIEWITEMS_URL
+            )
+        assert url is None
+
+    def test_fetch_failure_returns_none(self):
+        """If the series page fetch fails, return None gracefully."""
+        with patch("manufacturer_scrapers._fetch_with_requests", return_value=None):
+            url = _find_item_url_in_series_page(
+                self.AMI_BASE_URL, "UCT305-16", self.VIEWITEMS_URL
+            )
+        assert url is None
 
 
 if __name__ == "__main__":

@@ -606,6 +606,9 @@ def _find_item_url_in_series_page(
       1. Try an exact slug match (part_number.lower())
       2. Try the base slug (prefix + size + bore, e.g. "muchpl205-14")
       3. Take the first item whose slug starts with the base slug
+      4. Take the first item whose slug is a hyphen-separated prefix of the base
+         slug — handles catalogs that omit the MI bore suffix in the URL
+         (e.g. catalog slug "uct305" matches MI part "UCT305-16")
 
     Returns the full item URL, or None if no match.
     """
@@ -619,10 +622,11 @@ def _find_item_url_in_series_page(
     base_slug = _extract_base_slug(part_number)
     part_lc = part_number.lower()
 
-    # Priority order: exact match > base slug exact match > base slug prefix match
+    # Priority order: exact > base slug exact > base slug prefix > bore-stripped prefix
     exact_match: str | None = None
     base_exact: str | None = None
     base_prefix: str | None = None
+    bore_stripped: str | None = None
 
     for a in item_links:
         href = a.get("href", "")
@@ -634,8 +638,10 @@ def _find_item_url_in_series_page(
             base_exact = href
         if slug.startswith(base_slug) and base_prefix is None:
             base_prefix = href
+        if base_slug.startswith(slug + "-") and bore_stripped is None:
+            bore_stripped = href
 
-    chosen = exact_match or base_exact or base_prefix
+    chosen = exact_match or base_exact or base_prefix or bore_stripped
     if chosen:
         if not chosen.startswith(("http://", "https://")):
             chosen = urljoin(base_url, chosen)
