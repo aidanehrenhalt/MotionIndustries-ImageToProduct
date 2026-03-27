@@ -20,5 +20,11 @@ playwright>=1.40
 # Image Classification (CNN model — web_scraper.py --classify flag)
 # Install torch from https://pytorch.org/get-started/locally/ for the correct CUDA/CPU variant.
 # CPU-only example: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# NumPy is pinned below 2.0 because the current torch/torchvision setup used
+# by this project fails classification transforms with NumPy 2.x in validation.
 torch>=2.0
 torchvision>=0.15
+numpy<2
+
+# Development / Testing
+pytest>=8.0

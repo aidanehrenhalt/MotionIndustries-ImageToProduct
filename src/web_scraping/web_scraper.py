@@ -27,7 +27,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import quote, quote_plus, urlparse
 
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, NotFoundError, ConnectionError as ESConnectionError
 from elasticsearch.helpers import bulk
 
 import boto3
@@ -163,23 +163,32 @@ def load_product_catalog(csv_path: str) -> list[dict]:
                     "motion_product_id": (
                         row.get("[<ID>]") or row.get("<ID>") or row.get("ID") or ""
                     ).strip(),
-                    "item_number": row.get("Item Number", "").strip(),
+                    "item_number": (
+                        row.get("Item Number") or row.get("ITEM_NUMBER") or ""
+                    ).strip(),
                     "enterprise_name": (
                         row.get("ENTERPRISE_NAME") or row.get("Enterprise Name") or ""
                     ).strip(),
                     "mfr_name": (
                         row.get("MFR_NAME") or row.get("Manufacturer Name") or ""
                     ).strip(),
-                    "mfr_part_number": row.get("Manufacturer Part Number", "").strip(),
+                    "mfr_part_number": (
+                        row.get("Manufacturer Part Number") or row.get("MFR_PART_NUMBER") or ""
+                    ).strip(),
                     "category": (
                         row.get("PGC4 Description") or row.get("PGC Description") or ""
                     ).strip(),
                     "web_desc": (
                         row.get("Web Description") or row.get("Web Product Description") or ""
                     ).strip(),
-                    "internal_description": row.get("Motion Internal Description", "").strip(),
+                    "internal_description": (
+                        row.get("Motion Internal Description")
+                        or row.get("MOTION_INTERNAL_DESCRIPTION") or ""
+                    ).strip(),
                     "pgc": (row.get("PGC4") or row.get("PGC") or "").strip(),
-                    "primary_image_filename": row.get("PrimaryImageFilename", "").strip(),
+                    "primary_image_filename": (
+                        row.get("PrimaryImageFilename") or row.get("PRIMARYIMAGEFILENAME") or ""
+                    ).strip(),
                 }
 
                 # Temporary: use simple broad keywords for Wikimedia/OpenVerse
@@ -744,17 +753,21 @@ def index_to_elasticsearch(record: dict, es: Elasticsearch, product_row: dict):
     log.info(f"[ES] Product {pid} indexed with scrape_summary")
 
 
-def push_predictions_to_es(json_dir: Path, es: Elasticsearch) -> None:
+def push_predictions_to_es(json_files: list, es: Elasticsearch) -> None:
     """
-    After classify_json_dir() has written predicted_class into the JSON files,
+    After classify_json_files() has written predicted_class into the JSON files,
     sync those predictions back into the mi_candidate_images Elasticsearch index.
+
+    Accepts a list of specific Path objects scoped to the current scrape run
+    rather than scanning an entire directory, so historical artifacts are not
+    accidentally reprocessed.
 
     Uses the same SHA1(product_id:image_url) document-ID scheme as
     index_to_elasticsearch() so every update lands on the correct document.
-    Documents that no longer exist in ES are silently skipped (ignore 404).
     """
     updated = 0
-    for json_file in sorted(json_dir.glob("*.json")):
+    for json_file in json_files:
+        json_file = Path(json_file)
         try:
             data = json.loads(json_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
@@ -774,8 +787,24 @@ def push_predictions_to_es(json_dir: Path, es: Elasticsearch) -> None:
                     doc={"predicted_class": img["predicted_class"]},
                 )
                 updated += 1
-            except Exception:
-                pass  # 404 or mapping error — skip silently
+            except NotFoundError:
+                log.debug(
+                    f"[ES] Doc {doc_id} not found (stale) — "
+                    f"product={pid} url={img.get('image_url', '')}"
+                )
+            except ESConnectionError as exc:
+                log.error(
+                    f"[ES] Connection error pushing predicted_class: "
+                    f"doc_id={doc_id} product={pid} "
+                    f"{type(exc).__name__}: {exc}"
+                )
+            except Exception as exc:
+                log.warning(
+                    f"[ES] Failed to push predicted_class: "
+                    f"doc_id={doc_id} product={pid} "
+                    f"image_url={img.get('image_url', '')} "
+                    f"{type(exc).__name__}: {exc}"
+                )
 
     log.info(f"[ES] Pushed predicted_class for {updated} images into mi_candidate_images")
 
@@ -953,10 +982,10 @@ if __name__ == "__main__":
                 _mod = _ilu.module_from_spec(_spec)
                 _spec.loader.exec_module(_mod)
                 log.info("[classify] Running image classifier on downloaded images...")
-                n_classified = _mod.classify_json_dir(JSON_DIR, _model_path)
+                n_classified = _mod.classify_json_files(saved_files, _model_path, s3_client=s3)
                 print(f"\n  Classified {n_classified} images (predicted_class written to JSON files)")
                 if es:
-                    push_predictions_to_es(JSON_DIR, es)
+                    push_predictions_to_es(saved_files, es)
                     print(f"  predicted_class synced to Elasticsearch mi_candidate_images")
             except ImportError as e:
                 log.error(
