@@ -66,7 +66,7 @@ Progress log for the `WebScraper` branch since January 2026.
 - **Requirements update** (`requirements.txt`, +3 lines)
 - **94 JSON output files** in `src/web_scraping/output/json/` — Scrape results from test runs
 - **CSV data files** — `ImageToProduct-Missing_Product_Images.csv`, `UniqueEnterpriseAndMFR.csv`
-- **Source documentation** — `SourceProductImages.md`
+- **Source documentation** — `docs/SourceProductImages.md`
 
 ---
 

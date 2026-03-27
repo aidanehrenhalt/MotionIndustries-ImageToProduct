@@ -1,5 +1,9 @@
 # Scraper to ML Classification Pipeline Review
 
+This document is a validation and findings record.
+
+For canonical run instructions, use `docs/PIPELINE_RUNBOOK.md`.
+
 ## Scope
 
 This review focuses on the handoff between:

@@ -2,10 +2,12 @@
 
 This folder contains a local AMI Bearings demo catalog built from 4 live product pages.
 
+Primary setup and run instructions now live in the root [README](../../README.md).
+Use this file only as a folder-level reference.
+
 ## Files
 
-- `test_product_urls.md`: Source URL list for the AMI pages to scrape
-- `scrape_ami_pages.py`: Uses `crawl4ai` to scrape the source pages into raw artifacts
+- `test_product_urls.md`: Source URL list used for the original AMI page collection
 - `scraped_data/`: Saved crawl output including raw HTML, markdown, and summary JSON
 - `build_demo_site.py`: Normalizes the crawl output, downloads local product images, and builds the static demo site
 - `site/`: Generated static website for local pipeline testing
@@ -15,9 +17,6 @@ This folder contains a local AMI Bearings demo catalog built from 4 live product
 From the repo root:
 
 ```bash
-CRAWL4_AI_BASE_DIRECTORY=/home/aceaid/MotionIndustries-ImageToProduct/.crawl4ai_runtime \
-./.venv/bin/python src/demo_mfr_site/scrape_ami_pages.py
-
 ./.venv/bin/python src/demo_mfr_site/build_demo_site.py
 ```
 

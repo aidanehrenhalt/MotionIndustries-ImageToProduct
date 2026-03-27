@@ -22,3 +22,6 @@ Thumbs.db
 # Claude Code
 
 */.claude/*
+
+# Temporary crawl runtime artifacts
+.crawl4ai_runtime/
