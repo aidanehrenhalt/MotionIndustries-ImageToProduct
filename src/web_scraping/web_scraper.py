@@ -13,7 +13,9 @@ python web_scraper.py --csv test-products_sample.csv                     # Scrap
 python web_scraper.py --from-es --mfr-filter SKF --es --minio --classify # Full pipeline with classification
 """
 
+import concurrent.futures
 import os
+import sys
 import json
 import time
 import hashlib
@@ -649,6 +651,7 @@ def scrape_product_images(
             "mfr_part_number": product["mfr_part_number"],
             "description": product.get("web_desc") or product.get("description", ""),
             "category": product["category"],
+            "pgc": product.get("pgc", ""),
         },
         "scrape_summary": {
             "total_images_found": len(raw_images),
@@ -976,14 +979,31 @@ if __name__ == "__main__":
             )
         else:
             try:
-                import importlib.util as _ilu
-                _classifier_file = _script_dir.parent / "Image_Classifier" / "classify_json_images.py"
-                _spec = _ilu.spec_from_file_location("classify_json_images", _classifier_file)
-                _mod = _ilu.module_from_spec(_spec)
-                _spec.loader.exec_module(_mod)
-                log.info("[classify] Running image classifier on downloaded images...")
-                n_classified = _mod.classify_json_files(saved_files, _model_path, s3_client=s3)
-                print(f"\n  Classified {n_classified} images (predicted_class written to JSON files)")
+                _classifier_dir = str(_script_dir.parent / "Image_Classifier")
+                if _classifier_dir not in sys.path:
+                    sys.path.insert(0, _classifier_dir)
+                import classify_json_images as _mod  # noqa: E402
+
+                # Pass 1 (parallel): Image Classifier (CNN) + Text Analysis (ranker)
+                # run concurrently — both are independent branches per the pipeline
+                # flowchart; apply_final_ranking gates on both completing.
+                log.info("[classify] Running image classifier and text ranker in parallel...")
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _pool:
+                    _f_classify = _pool.submit(
+                        _mod.classify_json_files, saved_files, _model_path, s3_client=s3
+                    )
+                    _f_rank = _pool.submit(_mod.rank_json_files, saved_files)
+                    n_classified = _f_classify.result()
+                    n_ranked    = _f_rank.result()
+
+                # Pass 2: combine classifier + ranker signals into final_score / final_rank
+                log.info("[classify] Applying final ranking...")
+                n_final = _mod.apply_final_ranking(saved_files)
+
+                print(f"\n  Classified {n_classified} images  (predicted_class + classifier_confidence)")
+                print(f"  Ranked     {n_ranked} images  (ranker_score + score_breakdown)")
+                print(f"  Final rank assigned to {n_final} images  (final_score + final_rank)")
+
                 if es:
                     push_predictions_to_es(saved_files, es)
                     print(f"  predicted_class synced to Elasticsearch mi_candidate_images")

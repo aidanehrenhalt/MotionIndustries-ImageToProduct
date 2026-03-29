@@ -229,14 +229,24 @@ def rank_json_files(json_files: list) -> int:
             continue
 
         query  = _build_query_vector(data)
+
+        # Backfill index on originals before ranking so the merge key is
+        # always stable.  rank_candidates returns sorted copies — positional
+        # fallback after sorting would map to the wrong candidate.
+        for i, img in enumerate(candidates):
+            if "index" not in img:
+                log.warning(
+                    f"[ranker] Candidate at position {i} in {json_file.name} "
+                    "has no 'index' field; synthesizing index=%d", i
+                )
+                img["index"] = i
+
         ranked = _rank_candidates(query, candidates)
 
-        # rank_candidates returns enriched copies sorted by score.
-        # Merge ranker fields back into the original list by index field
-        # (or list position when index is absent).
-        ranked_by_index = {r.get("index", i): r for i, r in enumerate(ranked)}
-        for i, img_info in enumerate(candidates):
-            key = img_info.get("index", i)
+        # Merge ranker fields back into the original list using the stable index key.
+        ranked_by_index = {r["index"]: r for r in ranked}
+        for img_info in candidates:
+            key = img_info["index"]
             if key in ranked_by_index:
                 r = ranked_by_index[key]
                 img_info["ranker_score"]    = r["ranker_score"]

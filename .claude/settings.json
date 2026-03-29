@@ -1,0 +1,28 @@
+{
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/protect-files.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "if": ".+\\.mdx?$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/quickstart-nudge.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

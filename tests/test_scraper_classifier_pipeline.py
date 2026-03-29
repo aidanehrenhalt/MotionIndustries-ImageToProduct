@@ -218,3 +218,168 @@ def test_classifier_confidence_is_written(tmp_path):
     assert candidate["predicted_class"] == 2
     assert "classifier_confidence" in candidate
     assert 0.0 <= candidate["classifier_confidence"] <= 1.0
+
+
+# ── Test 7: rank_json_files writes ranker fields ───────────────────────────────
+
+def test_rank_json_files_writes_ranker_fields(tmp_path):
+    """rank_json_files must write ranker_score, score_pct, score_breakdown to each candidate."""
+    record = {
+        "product": {
+            "motion_product_id": "RANK001",
+            "mfr_name": "SKF",
+            "mfr_part_number": "6205-2RS1",
+            "description": "Deep groove ball bearing",
+            "category": "Ball Bearings",
+        },
+        "candidate_images": [
+            {
+                "index": 0,
+                "image_url": "http://example.com/a.jpg",
+                "title": "SKF 6205 bearing",
+                "keyword_used": "SKF 6205-2RS1",
+                "tags": ["bearing", "SKF"],
+                "source_name": "Wikimedia",
+            },
+            {
+                "index": 1,
+                "image_url": "http://example.com/b.jpg",
+                "title": "generic industrial part",
+                "keyword_used": "industrial",
+                "tags": [],
+                "source_name": "OpenVerse",
+            },
+        ],
+    }
+    json_file = tmp_path / "RANK001.json"
+    json_file.write_text(json.dumps(record), encoding="utf-8")
+
+    n = cji.rank_json_files([json_file])
+
+    assert n == 2
+    data = json.loads(json_file.read_text())
+    for candidate in data["candidate_images"]:
+        assert "ranker_score" in candidate
+        assert "score_pct" in candidate
+        assert "score_breakdown" in candidate
+        assert 0.0 <= candidate["ranker_score"] <= 1.0
+
+
+# ── Test 8: apply_final_ranking creates deterministic final_rank order ─────────
+
+def test_apply_final_ranking_creates_deterministic_order(tmp_path):
+    """apply_final_ranking must assign 1-based final_rank with rank 1 = highest final_score."""
+    record = {
+        "product": {
+            "motion_product_id": "FINAL001",
+            "mfr_name": "SKF",
+            "mfr_part_number": "6205",
+            "description": "Bearing",
+            "category": "Bearings",
+            "pgc": "1",
+        },
+        "candidate_images": [
+            {
+                "index": 0,
+                "image_url": "http://example.com/low.jpg",
+                "classifier_confidence": 0.3,
+                "predicted_class": 0,
+                "ranker_score": 0.1,
+                "confidence_hints": {"preliminary_score": 0.2},
+            },
+            {
+                "index": 1,
+                "image_url": "http://example.com/high.jpg",
+                "classifier_confidence": 0.9,
+                "predicted_class": 0,
+                "ranker_score": 0.8,
+                "confidence_hints": {"preliminary_score": 0.9},
+            },
+        ],
+    }
+    json_file = tmp_path / "FINAL001.json"
+    json_file.write_text(json.dumps(record), encoding="utf-8")
+
+    n = cji.apply_final_ranking([json_file])
+
+    assert n == 2
+    data = json.loads(json_file.read_text())
+    candidates = data["candidate_images"]
+    ranks = {c["image_url"]: c["final_rank"] for c in candidates}
+    assert ranks["http://example.com/high.jpg"] == 1
+    assert ranks["http://example.com/low.jpg"] == 2
+    # Ranks must be 1-based consecutive
+    assert sorted(c["final_rank"] for c in candidates) == [1, 2]
+
+
+# ── Test 9: compute_final_score PGC-known vs PGC-unknown ──────────────────────
+
+def test_compute_final_score_pgc_known_vs_unknown():
+    """PGC-known path uses class_match; PGC-unknown redistributes weight so total is still ≤1."""
+    candidate = {
+        "classifier_confidence": 0.8,
+        "predicted_class": 0,          # class index 0 = PGC1 value 1 (BEARINGS)
+        "ranker_score": 0.6,
+        "confidence_hints": {"preliminary_score": 0.5},
+    }
+
+    # PGC-known: class 0 is in expected → class_match = 1.0
+    score_known = cji.compute_final_score(candidate, expected_classes={0})
+    expected_known = round(0.3 * 0.8 + 0.2 * 1.0 + 0.3 * 0.6 + 0.2 * 0.5, 6)
+    assert score_known == expected_known
+
+    # PGC-known: class 0 is NOT in expected → class_match = 0.0
+    score_mismatch = cji.compute_final_score(candidate, expected_classes={3})
+    expected_mismatch = round(0.3 * 0.8 + 0.2 * 0.0 + 0.3 * 0.6 + 0.2 * 0.5, 6)
+    assert score_mismatch == expected_mismatch
+
+    # PGC-unknown: class_match weight redistributed; result must be in [0, 1]
+    score_unknown = cji.compute_final_score(candidate, expected_classes=set())
+    assert 0.0 <= score_unknown <= 1.0
+    # Score with unknown PGC must be higher than mismatch (no class_match penalty)
+    assert score_unknown > score_mismatch
+
+
+# ── Test 10: rank_json_files synthesizes index when missing ───────────────────
+
+def test_rank_json_files_synthesizes_missing_index(tmp_path, caplog):
+    """Candidates without 'index' get a synthesized one; ranker fields still land on the correct candidate."""
+    record = {
+        "product": {
+            "motion_product_id": "NOIDX001",
+            "mfr_name": "Gates",
+            "mfr_part_number": "AX38",
+            "description": "V-Belt cogged A-section",
+            "category": "V-Belts",
+        },
+        "candidate_images": [
+            # No 'index' field on either candidate
+            {
+                "image_url": "http://example.com/first.jpg",
+                "title": "Gates AX38 V-Belt",
+                "keyword_used": "Gates AX38",
+                "tags": ["belt", "Gates"],
+                "source_name": "Wikimedia",
+            },
+            {
+                "image_url": "http://example.com/second.jpg",
+                "title": "generic conveyor belt",
+                "keyword_used": "belt",
+                "tags": ["belt"],
+                "source_name": "OpenVerse",
+            },
+        ],
+    }
+    json_file = tmp_path / "NOIDX001.json"
+    json_file.write_text(json.dumps(record), encoding="utf-8")
+
+    with caplog.at_level(logging.WARNING, logger="classifier"):
+        n = cji.rank_json_files([json_file])
+
+    assert n == 2
+    data = json.loads(json_file.read_text())
+    # Both candidates must have ranker fields after index synthesis
+    for candidate in data["candidate_images"]:
+        assert "ranker_score" in candidate
+        assert "index" in candidate  # synthesized index persisted
+    assert "has no 'index' field" in caplog.text

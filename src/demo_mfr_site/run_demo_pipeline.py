@@ -119,6 +119,7 @@ def build_record(
             "mfr_part_number": product["part_number"],
             "description": product["item_name"],
             "category": product["breadcrumbs"][-1] if product.get("breadcrumbs") else "",
+            "pgc": product.get("pgc", ""),
         },
         "scrape_summary": {
             "total_images_found": 1 if page_data["image_url"] else 0,
