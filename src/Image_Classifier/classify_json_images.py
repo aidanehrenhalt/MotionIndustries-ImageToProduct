@@ -21,11 +21,8 @@ import os
 import sys
 import argparse
 import logging
-import torch
-import torch.nn as nn
 from pathlib import Path
 from PIL import Image
-from torchvision import transforms
 
 # Allow importing sibling src packages without an editable install
 _WEB_SCRAPING_DIR = Path(__file__).resolve().parent.parent / "web_scraping"
@@ -43,8 +40,9 @@ N_CLASSES = 8
 
 # ── Model Architecture ────────────────────────────────────────────────────────
 
-def build_model() -> nn.Sequential:
+def build_model():
     """Return an uninitialised instance of the 8-class CNN."""
+    import torch.nn as nn
     return nn.Sequential(
         nn.Conv2d(in_channels=3, out_channels=25, kernel_size=3, stride=1, padding=1),
         nn.BatchNorm2d(25),
@@ -79,8 +77,9 @@ def build_model() -> nn.Sequential:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def load_model(model_path: Path) -> nn.Module:
+def load_model(model_path: Path):
     """Load and return the trained model from *model_path* in eval mode."""
+    import torch
     model = build_model()
     model.load_state_dict(
         torch.load(str(model_path), weights_only=True, map_location=torch.device("cpu"))
@@ -90,8 +89,9 @@ def load_model(model_path: Path) -> nn.Module:
     return model
 
 
-def make_preprocess() -> transforms.Compose:
+def make_preprocess():
     """Return the standard preprocessing pipeline (resize + to-tensor)."""
+    from torchvision import transforms
     return transforms.Compose([
         transforms.Resize((500, 500)),
         transforms.ToTensor(),
@@ -119,9 +119,9 @@ def _get_s3_client():
 
 
 def classify_image_from_bytes(
-    model: nn.Module,
+    model,
     img_bytes: bytes,
-    preprocess: transforms.Compose,
+    preprocess,
 ) -> dict:
     """
     Classify an image supplied as raw bytes (e.g. fetched from MinIO).
@@ -129,6 +129,7 @@ def classify_image_from_bytes(
     Returns a dict with predicted_class (0-7) and classifier_confidence (0-1),
     or {"predicted_class": -1, "classifier_confidence": 0.0} on failure.
     """
+    import torch
     try:
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         img_tensor = preprocess(img).unsqueeze(0)
@@ -400,13 +401,14 @@ def classify_json_files(
     return total_classified
 
 
-def classify_image(model: nn.Module, image_path: Path, preprocess: transforms.Compose) -> dict:
+def classify_image(model, image_path: Path, preprocess) -> dict:
     """
     Classify a single image file.
 
     Returns a dict with predicted_class (0-7) and classifier_confidence (0-1),
     or {"predicted_class": -1, "classifier_confidence": 0.0} if the image cannot be read.
     """
+    import torch
     try:
         img = Image.open(str(image_path)).convert("RGB")
         img_tensor = preprocess(img).unsqueeze(0)
