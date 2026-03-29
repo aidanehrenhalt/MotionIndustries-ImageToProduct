@@ -2,9 +2,13 @@
 .env
 .venv/
 
+# Local Output Folders
+output/images
+output/json
+
 # Local Output Folders - Demo MFR Site
-src/demo_mfr_site/pipeline_output/json
 src/demo_mfr_site/pipeline_output/images
+src/demo_mfr_site/pipeline_output/json
 
 # --- Python ---
 __pycache__/
