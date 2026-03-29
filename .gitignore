@@ -2,6 +2,10 @@
 .env
 .venv/
 
+# Local Output Folders - Demo MFR Site
+src/demo_mfr_site/pipeline_output/json
+src/demo_mfr_site/pipeline_output/images
+
 # --- Python ---
 __pycache__/
 secrets.py
