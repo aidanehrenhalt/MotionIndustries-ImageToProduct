@@ -948,11 +948,11 @@ class ImageSearcher:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _default_json_dir() -> Path:
-    return Path(__file__).resolve().parent.parent / "output" / "json"
+    return Path(__file__).resolve().parent.parent.parent / "output" / "json"
 
 
 def _default_output_csv() -> Path:
-    return Path(__file__).resolve().parent.parent / "output" / "rankings.csv"
+    return Path(__file__).resolve().parent.parent.parent / "output" / "rankings.csv"
 
 
 def main() -> None:
