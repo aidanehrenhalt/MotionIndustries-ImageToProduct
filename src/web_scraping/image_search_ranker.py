@@ -92,7 +92,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, List, Optional
 
 log = logging.getLogger("image_search_ranker")
 
@@ -617,8 +617,9 @@ def apply_final_ranking(json_files) -> int:
 # CSV export  (flat file for the website interface)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Canonical column order for the output CSV
-CSV_COLUMNS: list = [
+# Canonical columns kept first in the output CSV. Any additional metadata
+# discovered in the JSON records is appended after these columns.
+CSV_BASE_COLUMNS: list = [
     "motion_product_id",
     "image_rank",
     "image_filename",
@@ -640,12 +641,42 @@ CSV_COLUMNS: list = [
 ]
 
 
-def _extract_csv_row(product_id: str, rank: int, img: dict) -> dict:
+def _flatten_for_csv(value: Any, prefix: str = "") -> dict[str, Any]:
     """
-    Flatten one candidate image dict into a CSV-ready row dict.
+    Flatten nested dict/list metadata into a single-level dict for CSV export.
+
+    Dict keys become underscore-delimited column names. Lists of scalars are
+    JSON-encoded into one column; lists of dicts are expanded by index.
+    """
+    flat: dict[str, Any] = {}
+
+    if isinstance(value, dict):
+        for key, nested_value in value.items():
+            next_prefix = f"{prefix}_{key}" if prefix else str(key)
+            flat.update(_flatten_for_csv(nested_value, next_prefix))
+        return flat
+
+    if isinstance(value, list):
+        if all(not isinstance(item, (dict, list)) for item in value):
+            flat[prefix] = json.dumps(value, ensure_ascii=False)
+            return flat
+        for index, nested_value in enumerate(value):
+            next_prefix = f"{prefix}_{index}" if prefix else str(index)
+            flat.update(_flatten_for_csv(nested_value, next_prefix))
+        return flat
+
+    flat[prefix] = value
+    return flat
+
+
+def _extract_csv_row(data: dict, rank: int, img: dict) -> dict:
+    """
+    Flatten one candidate image dict plus its parent JSON metadata into a
+    CSV-ready row dict.
 
     All fields are safe strings / numbers suitable for csv.DictWriter.
     """
+    product = data.get("product", {})
     ai_conf     = float(img.get("classifier_confidence", 0.0))
     ai_cls      = int(img.get("predicted_class", -1))
     text_score  = float(
@@ -663,8 +694,8 @@ def _extract_csv_row(product_id: str, rank: int, img: dict) -> dict:
         url_path = img.get("image_url", "") or ""
         filename = Path(url_path.split("?")[0]).name
 
-    return {
-        "motion_product_id":  product_id,
+    row = {
+        "motion_product_id":  product.get("motion_product_id", ""),
         "image_rank":         rank,
         "image_filename":     filename,
         "image_url":          img.get("image_url", ""),
@@ -683,6 +714,13 @@ def _extract_csv_row(product_id: str, rank: int, img: dict) -> dict:
         "image_height":       img.get("actual_height") or img.get("height", ""),
         "scraped_at":         img.get("scraped_at", ""),
     }
+
+    # Include the full parent JSON record metadata on every row, except for
+    # candidate_images itself, which is represented by the per-row candidate.
+    record_metadata = {k: v for k, v in data.items() if k != "candidate_images"}
+    row.update(_flatten_for_csv(record_metadata))
+    row.update(_flatten_for_csv(img, "candidate"))
+    return row
 
 
 def export_rankings_to_csv(
@@ -706,6 +744,7 @@ def export_rankings_to_csv(
         Total number of rows written to the CSV.
     """
     rows: list = []
+    discovered_columns: set[str] = set(CSV_BASE_COLUMNS)
 
     for json_file in sorted(json_dir.glob("*.json")):
         try:
@@ -714,7 +753,6 @@ def export_rankings_to_csv(
             log.warning("[csv] Skipping %s: %s", json_file.name, exc)
             continue
 
-        product_id = data.get("product", {}).get("motion_product_id", json_file.stem)
         candidates = data.get("candidate_images", [])
 
         # Sort by final_rank if present, else by final_score descending
@@ -728,11 +766,15 @@ def export_rankings_to_csv(
             if final_score < min_score:
                 continue
             rank = int(img.get("final_rank", 0))
-            rows.append(_extract_csv_row(product_id, rank, img))
+            row = _extract_csv_row(data, rank, img)
+            rows.append(row)
+            discovered_columns.update(row.keys())
+
+    fieldnames = list(CSV_BASE_COLUMNS) + sorted(discovered_columns - set(CSV_BASE_COLUMNS))
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     with output_csv.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=CSV_COLUMNS)
+        writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
 

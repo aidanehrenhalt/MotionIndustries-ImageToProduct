@@ -1,12 +1,13 @@
 {
   "schema_version": "1.0",
-  "scraped_at": "2026-03-27T16:46:14.929931+00:00",
+  "scraped_at": "2026-03-29T17:36:14.910477+00:00",
   "product": {
     "motion_product_id": "UCST207-22",
     "mfr_name": "AMI Bearings Inc.",
     "mfr_part_number": "UCST207-22",
     "description": "Set Screw Locking Wide Slot Take-Up Unit, UCST200 Series",
-    "category": "Crew Locking Wide Slot Take Up Unit Ucst200 Series"
+    "category": "Crew Locking Wide Slot Take Up Unit Ucst200 Series",
+    "pgc": ""
   },
   "scrape_summary": {
     "total_images_found": 1,
@@ -19,9 +20,9 @@
   "candidate_images": [
     {
       "index": 0,
-      "image_url": "http://127.0.0.1:58578/assets/images/ucst207-22-1.jpg",
-      "thumbnail_url": "http://127.0.0.1:58578/assets/images/ucst207-22-1.jpg",
-      "source_page": "http://127.0.0.1:58578/products/ucst207-22.html",
+      "image_url": "http://127.0.0.1:56911/assets/images/ucst207-22-1.jpg",
+      "thumbnail_url": "http://127.0.0.1:56911/assets/images/ucst207-22-1.jpg",
+      "source_page": "http://127.0.0.1:56911/products/ucst207-22.html",
       "source_name": "Manufacturer Site / AMI BEARINGS INC",
       "title": "Set Screw Locking Wide Slot Take-Up Unit, UCST200 Series",
       "license": "Manufacturer catalog \u2014 proprietary, internal use only",
@@ -50,8 +51,67 @@
         "source_reliability": "high",
         "preliminary_score": 1.0
       },
-      "scraped_at": "2026-03-27T16:46:14.929931+00:00",
-      "predicted_class": 7
+      "scraped_at": "2026-03-29T17:36:14.910477+00:00",
+      "predicted_class": 7,
+      "classifier_confidence": 0.4618,
+      "ranker_score": 0.058824,
+      "score_pct": "5.9%",
+      "score_breakdown": {
+        "id_number": {
+          "raw_score": 0.0,
+          "weight": 10.0,
+          "contribution": 0.0
+        },
+        "item_number": {
+          "raw_score": 0.0,
+          "weight": 8.0,
+          "contribution": 0.0
+        },
+        "manufacture_part_number": {
+          "raw_score": 0.0,
+          "weight": 8.0,
+          "contribution": 0.0
+        },
+        "enterprise_number": {
+          "raw_score": 0.0,
+          "weight": 6.0,
+          "contribution": 0.0
+        },
+        "image_name": {
+          "raw_score": 0.0,
+          "weight": 5.0,
+          "contribution": 0.0
+        },
+        "manufacture_name": {
+          "raw_score": 0.0,
+          "weight": 4.0,
+          "contribution": 0.0
+        },
+        "pgc": {
+          "raw_score": 0.0,
+          "weight": 3.0,
+          "contribution": 0.0
+        },
+        "pgc_description": {
+          "raw_score": 0.6,
+          "weight": 3.0,
+          "contribution": 1.8
+        },
+        "web_product_description": {
+          "raw_score": 0.6,
+          "weight": 2.0,
+          "contribution": 1.2
+        },
+        "motion_internal_desc": {
+          "raw_score": 0.0,
+          "weight": 2.0,
+          "contribution": 0.0
+        }
+      },
+      "final_score": 0.445234,
+      "final_rank": 1,
+      "text_similarity_score": 0.058824,
+      "final_score_pct": "44.5%"
     }
   ]
 }
