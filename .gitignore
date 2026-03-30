@@ -23,8 +23,10 @@ data/
 .DS_Store
 Thumbs.db
 
-# Claude Code
+# --- React.js ---
+build/
 
+# Claude Code
 */.claude/*
 
 # Temporary crawl runtime artifacts
