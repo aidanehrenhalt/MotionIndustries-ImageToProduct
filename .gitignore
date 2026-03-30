@@ -25,6 +25,7 @@ Thumbs.db
 
 # --- React.js ---
 build/
+node_modules/
 
 # Claude Code
 */.claude/*
