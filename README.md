@@ -241,6 +241,49 @@ It also runs the same three processing stages:
 - Text/metadata ranker
 - Final fused ranking
 
+## Quick Start: Demo MFR Review Site (React.js)
+
+### What is it?
+Think of it like a triage screen for a doctor — but instead of patients, you're reviewing candidate product images ranked by the pipeline. It's a browser-based app (built with React) that lets a human reviewer look at each product, compare the images the pipeline found, and stamp each one as approved, rejected, or skipped.
+
+### Why would you use it?
+The pipeline produces ranked candidate images automatically, but someone still needs to make the final call on whether a match is good. This site replaces that step from a spreadsheet or raw JSON file with a structured, click-through review interface.
+
+### Get started
+
+1. **Install dependencies** — from the repo root, run:
+
+   ```bash
+   cd Demo_MFR_Review/Demo_MFR_Review/client
+   npm install
+   ```
+
+2. **Place the pipeline output file** — copy `review_queue.json` (produced by the demo pipeline) into `public/assets/data/review_queue.json` so the app can load it. The demo pipeline writes this file to `src/demo_mfr_site/pipeline_output/`; the default URL the app fetches is `assets/data/review_queue.json`.
+
+3. **Start the development server:**
+
+   ```bash
+   npm start
+   ```
+
+   The app opens at `http://localhost:3000` in your browser.
+
+4. **Use the three tabs in the app:**
+   - **Input UI** — upload the product Excel/CSV to browse the product database.
+   - **Output UI** — enter the URL to `review_queue.json`, click "Load Review Queue", then approve or reject each product's best candidate image. Use arrow keys to flip between candidate images.
+   - **Review History** — see every decision made during the current browser session.
+
+To build a static copy instead of running the dev server:
+
+```bash
+npm run build
+```
+
+Then serve the `build/` folder with any static file server (e.g. `npx serve build`). A pre-built copy already lives at `Demo_MFR_Review/Demo_MFR_Review/client/build/`.
+
+### What to expect
+After loading the review queue, you will see one product at a time with its ranked candidate images and confidence scores; each decision moves the product out of the queue and into the history tab.
+
 ## What This Repository Does
 
 - Ingests product catalog rows from CSV or Elasticsearch
