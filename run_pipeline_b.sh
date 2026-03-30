@@ -15,12 +15,10 @@ PORT=8000
 
 cd "$REPO_ROOT"
 
-# --- Step 1: Optional rebuild ---
-if [[ "${1:-}" == "--rebuild" ]]; then
-    echo "==> Rebuilding demo site artifacts..."
-    "$VENV_PYTHON" src/demo_mfr_site/build_demo_site.py
-    echo "==> Rebuild complete."
-fi
+# --- Step 1: Build site artifacts ---
+echo "==> Syncing demo site artifacts..."
+"$VENV_PYTHON" src/demo_mfr_site/build_demo_site.py
+echo "==> Site artifacts ready."
 
 # --- Step 2: Run demo scrape + classify pipeline ---
 echo "==> Running demo pipeline (scrape + classify)..."
@@ -37,6 +35,7 @@ echo "==> Serving demo site at http://localhost:$PORT/"
 echo "    Useful pages:"
 echo "      http://localhost:$PORT/"
 echo "      http://localhost:$PORT/products/uct305.html"
+echo "      http://localhost:$PORT/review.html"
 echo "    Press Ctrl+C to stop."
 echo ""
 cd "$SITE_DIR"

@@ -224,6 +224,20 @@ def render_index_cards(products: list[dict]) -> str:
     return "\n".join(cards)
 
 
+def render_topbar(home_prefix: str = "") -> str:
+    return (
+        '<header class="topbar">'
+        '<div class="site-shell topbar-inner">'
+        f'<a class="brand" href="{home_prefix}index.html">Motion Industries Demo<strong>AMI Bearings</strong></a>'
+        '<nav class="topnav">'
+        f'<a href="{home_prefix}index.html">Catalog</a>'
+        f'<a href="{home_prefix}review.html">Review Queue</a>'
+        "</nav>"
+        "</div>"
+        "</header>"
+    )
+
+
 def write_stylesheet() -> None:
     styles = """\
 :root {
@@ -261,6 +275,19 @@ img { display: block; max-width: 100%; }
 }
 .brand { font-size: 0.95rem; letter-spacing: 0.16em; text-transform: uppercase; }
 .brand strong { display: block; font-size: 1.2rem; letter-spacing: 0.04em; }
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.topnav a {
+  padding: 8px 12px;
+  border: 1px solid rgba(19,36,47,0.12);
+  border-radius: 999px;
+  background: rgba(255,250,241,0.7);
+  font-size: 0.9rem;
+}
 .masthead { padding: 56px 0 28px; }
 .masthead-grid {
   display: grid;
@@ -334,10 +361,162 @@ img { display: block; max-width: 100%; }
   background: var(--accent);
   color: white;
 }
+.review-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 24px;
+  padding: 18px 0 48px;
+}
+.review-panel {
+  background: var(--panel);
+  border: 1px solid rgba(19,36,47,0.08);
+  box-shadow: 0 14px 36px rgba(19,36,47,0.08);
+  border-radius: 24px;
+  padding: 24px;
+}
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.review-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0 24px;
+}
+.stat-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(11,105,115,0.06);
+  border: 1px solid rgba(11,105,115,0.12);
+}
+.stat-card strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-top: 6px;
+}
+.review-product-list {
+  display: grid;
+  gap: 12px;
+}
+.review-product-button {
+  width: 100%;
+  text-align: left;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(19,36,47,0.12);
+  background: white;
+  cursor: pointer;
+}
+.review-product-button.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(11,105,115,0.14);
+}
+.review-product-button small,
+.muted {
+  color: var(--muted);
+}
+.review-grid {
+  display: grid;
+  gap: 18px;
+}
+.review-image-card {
+  border-radius: 20px;
+  border: 1px solid rgba(19,36,47,0.12);
+  background: white;
+  overflow: hidden;
+}
+.review-image-frame {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #dfe9ea, #f6efe2);
+  padding: 18px;
+}
+.review-image-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.review-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.metric {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(216,130,47,0.08);
+}
+.metric-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.candidate-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.candidate-table th,
+.candidate-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.candidate-row {
+  cursor: pointer;
+}
+.candidate-row.active {
+  background: rgba(11,105,115,0.08);
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.action-button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: inherit;
+  cursor: pointer;
+}
+.action-approve { background: var(--accent); color: white; }
+.action-reject { background: #8c3b2a; color: white; }
+.action-skip { background: #d8d2c4; color: var(--ink); }
+.action-export { background: var(--accent-2); color: white; }
+.review-feedback {
+  width: 100%;
+  min-height: 110px;
+  border-radius: 18px;
+  border: 1px solid rgba(19,36,47,0.16);
+  padding: 14px;
+  font: inherit;
+  background: #fffdf9;
+}
+.review-status {
+  margin-top: 14px;
+  color: var(--muted);
+}
+.empty-state {
+  padding: 26px;
+  border-radius: 20px;
+  background: rgba(216,130,47,0.1);
+  border: 1px solid rgba(216,130,47,0.2);
+}
 .footer { padding: 24px 0 48px; color: var(--muted); font-size: 0.94rem; }
 @media (max-width: 860px) {
-  .masthead-grid, .detail-layout, .product-grid, .highlights, .gallery-grid {
+  .masthead-grid, .detail-layout, .product-grid, .highlights, .gallery-grid, .review-layout, .review-summary, .review-metrics {
     grid-template-columns: 1fr;
+  }
+  .topbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 """
@@ -354,12 +533,7 @@ def write_index(products: list[dict]) -> None:
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="site-shell topbar-inner">
-      <div class="brand">Motion Industries Demo<strong>AMI Bearings</strong></div>
-      <div>Static mirror for Web Scraper to Image Classifier pipeline testing</div>
-    </div>
-  </header>
+  {render_topbar("")}
   <main class="site-shell">
     <section class="masthead">
       <div class="masthead-grid">
@@ -380,7 +554,7 @@ def write_index(products: list[dict]) -> None:
     </section>
   </main>
   <footer class="site-shell footer">
-    <p>Source artifacts live in <code>src/demo_mfr_site/scraped_data</code>. Normalized dataset is available at <code>assets/data/products.json</code>.</p>
+    <p>Source artifacts live in <code>src/demo_mfr_site/scraped_data</code>. Normalized dataset is available at <code>assets/data/products.json</code>. Ranked review queue data is written after the demo pipeline runs.</p>
   </footer>
 </body>
 </html>
@@ -399,12 +573,7 @@ def write_product_page(product: dict) -> None:
   <link rel="stylesheet" href="../assets/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="site-shell topbar-inner">
-      <a class="brand" href="../index.html">Motion Industries Demo<strong>AMI Bearings</strong></a>
-      <div>{escape(product['part_number'])}</div>
-    </div>
-  </header>
+  {render_topbar("../")}
   <main class="site-shell">
     <ol class="breadcrumbs">{render_breadcrumbs(product['breadcrumbs'], product['part_number'])}</ol>
     <section class="detail-layout">
@@ -447,6 +616,53 @@ def write_product_page(product: dict) -> None:
     (PRODUCTS_DIR / f"{product['slug']}.html").write_text(html, encoding="utf-8")
 
 
+def write_review_page() -> None:
+    html = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AMI Bearings Review Queue</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  """ + render_topbar("") + """
+  <main class="site-shell">
+    <section class="masthead">
+      <div class="masthead-grid">
+        <div>
+          <p class="kicker">Review Frontend</p>
+          <h1 class="hero-title">Manual review queue built from ranked demo pipeline output.</h1>
+          <p class="hero-copy">This page reads the normalized review dataset generated from pipeline rankings, JSON records, and output images. Review decisions stay local and can be exported as JSON.</p>
+        </div>
+        <aside class="summary-panel">
+          <p class="eyebrow">Review Source</p>
+          <h2>Pipeline-backed queue</h2>
+          <p>Run <code>./run_pipeline_b.sh</code> first so the demo pipeline can regenerate the ranked artifacts and review dataset.</p>
+        </aside>
+      </div>
+    </section>
+    <section id="review-app" class="review-layout">
+      <article class="review-panel">
+        <p class="eyebrow">Queue</p>
+        <div class="empty-state">Loading review queue…</div>
+      </article>
+      <aside class="review-panel">
+        <p class="eyebrow">Selected Product</p>
+        <div class="empty-state">Waiting for review data…</div>
+      </aside>
+    </section>
+  </main>
+  <footer class="site-shell footer">
+    <p>The review dataset is expected at <code>assets/data/review_queue.json</code>. Exported decisions remain local unless they are written back by a later backend integration.</p>
+  </footer>
+  <script src="assets/review.js"></script>
+</body>
+</html>
+"""
+    (SITE_DIR / "review.html").write_text(html, encoding="utf-8")
+
+
 def main() -> None:
     ensure_dirs()
     products = []
@@ -469,6 +685,7 @@ def main() -> None:
     write_index(products)
     for product in products:
         write_product_page(product)
+    write_review_page()
     (DATA_DIR / "products.json").write_text(json.dumps(products, indent=2), encoding="utf-8")
 
 

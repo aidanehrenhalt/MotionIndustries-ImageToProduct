@@ -7,5 +7,7 @@
     "mser204-12.json",
     "ucst207-22.json",
     "uct305.json"
-  ]
+  ],
+  "rankings_csv": "/home/aceaid/MotionIndustries-ImageToProduct/src/demo_mfr_site/pipeline_output/rankings.csv",
+  "review_queue_json": "/home/aceaid/MotionIndustries-ImageToProduct/src/demo_mfr_site/site/assets/data/review_queue.json"
 }

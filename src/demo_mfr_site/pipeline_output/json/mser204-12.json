@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "scraped_at": "2026-03-29T17:36:14.902684+00:00",
+  "scraped_at": "2026-03-30T21:38:27.448449+00:00",
   "product": {
     "motion_product_id": "MSER204-12",
     "mfr_name": "AMI Bearings Inc.",
@@ -20,9 +20,9 @@
   "candidate_images": [
     {
       "index": 0,
-      "image_url": "http://127.0.0.1:56911/assets/images/mser204-12-1.jpg",
-      "thumbnail_url": "http://127.0.0.1:56911/assets/images/mser204-12-1.jpg",
-      "source_page": "http://127.0.0.1:56911/products/mser204-12.html",
+      "image_url": "http://127.0.0.1:47901/assets/images/mser204-12-1.jpg",
+      "thumbnail_url": "http://127.0.0.1:47901/assets/images/mser204-12-1.jpg",
+      "source_page": "http://127.0.0.1:47901/products/mser204-12.html",
       "source_name": "Manufacturer Site / AMI BEARINGS INC",
       "title": "Stainless Steel Set Screw Locking Bearing Insert, MSER200 Series",
       "license": "Manufacturer catalog \u2014 proprietary, internal use only",
@@ -51,7 +51,7 @@
         "source_reliability": "high",
         "preliminary_score": 1.0
       },
-      "scraped_at": "2026-03-29T17:36:14.902684+00:00",
+      "scraped_at": "2026-03-30T21:38:27.448449+00:00",
       "predicted_class": 0,
       "classifier_confidence": 0.9883,
       "ranker_score": 0.058824,
@@ -109,9 +109,7 @@
         }
       },
       "final_score": 0.642671,
-      "final_rank": 1,
-      "text_similarity_score": 0.058824,
-      "final_score_pct": "64.3%"
+      "final_rank": 1
     }
   ]
 }
