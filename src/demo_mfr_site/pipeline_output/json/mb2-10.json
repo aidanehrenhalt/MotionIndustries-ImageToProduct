@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "scraped_at": "2026-03-30T21:38:27.439999+00:00",
+  "scraped_at": "2026-04-09T20:47:11.013300+00:00",
   "product": {
     "motion_product_id": "MB2-10",
     "mfr_name": "AMI Bearings Inc.",
@@ -20,9 +20,9 @@
   "candidate_images": [
     {
       "index": 0,
-      "image_url": "http://127.0.0.1:47901/assets/images/mb2-10-1.jpg",
-      "thumbnail_url": "http://127.0.0.1:47901/assets/images/mb2-10-1.jpg",
-      "source_page": "http://127.0.0.1:47901/products/mb2-10.html",
+      "image_url": "http://127.0.0.1:46383/assets/images/mb2-10-1.jpg",
+      "thumbnail_url": "http://127.0.0.1:46383/assets/images/mb2-10-1.jpg",
+      "source_page": "http://127.0.0.1:46383/products/mb2-10.html",
       "source_name": "Manufacturer Site / AMI BEARINGS INC",
       "title": "Stainless Steel Set Screw Locking Bearing Insert, MB200 Series",
       "license": "Manufacturer catalog \u2014 proprietary, internal use only",
@@ -51,7 +51,7 @@
         "source_reliability": "high",
         "preliminary_score": 1.0
       },
-      "scraped_at": "2026-03-30T21:38:27.439999+00:00",
+      "scraped_at": "2026-04-09T20:47:11.013300+00:00",
       "predicted_class": 0,
       "classifier_confidence": 0.9464,
       "ranker_score": 0.058824,
