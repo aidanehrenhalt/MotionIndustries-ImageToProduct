@@ -27,8 +27,9 @@ Thumbs.db
 build/
 node_modules/
 
-# Claude Code
+# Claude Code / Codex
 */.claude/*
+*/.codex/*
 
 # Temporary crawl runtime artifacts
 .crawl4ai_runtime/
