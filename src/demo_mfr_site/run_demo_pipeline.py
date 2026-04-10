@@ -34,6 +34,12 @@ SITE_REVIEW_IMAGES_DIR = SITE_DIR / "assets" / "review-images"
 SITE_REVIEW_QUEUE_JSON = SITE_DIR / "assets" / "data" / "review_queue.json"
 SITE_REVIEW_RANKINGS_CSV = SITE_DIR / "assets" / "data" / "review_rankings.csv"
 
+# Fixed job ID used by the API server for the pre-built demo job.
+DEMO_JOB_ID = "demo-pipeline"
+API_JOBS_DIR = PROJECT_ROOT / "uploads" / "jobs"
+API_OUTPUT_IMAGES_DIR = PROJECT_ROOT / "output" / "images"
+API_PORT = 5050
+
 HEADERS = {
     "User-Agent": "ImageToProduct-DemoPipeline/1.0",
 }
@@ -301,6 +307,149 @@ def export_review_dataset(json_dir: Path, rankings_csv: Path) -> dict:
     }
 
 
+def export_api_job(json_dir: Path, rankings_csv: Path, products: list[dict]) -> dict:
+    """
+    Write a completed job directory that the API server (server.py) can serve.
+
+    This lets the React UI's Output tab load the demo pipeline results directly
+    via `http://localhost:<API_PORT>/api/review-queue/demo-pipeline`, with images
+    served at `http://localhost:<API_PORT>/images/<filename>`.
+
+    Steps:
+    - Copy demo images to PROJECT_ROOT/output/images/ (flat, one file per product).
+    - Build review_queue.json using absolute HTTP image URLs.
+    - Write uploads/jobs/demo-pipeline/review_queue.json and input.csv.
+    - Write uploads/jobs/demo-pipeline/job_meta.json so server.py pre-loads it.
+    """
+    job_dir = API_JOBS_DIR / DEMO_JOB_ID
+    job_dir.mkdir(parents=True, exist_ok=True)
+    API_OUTPUT_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Copy images to the API server's output/images/ directory.
+    image_url_map: dict[str, str] = {}
+    for image_path in sorted(IMAGES_DIR.glob("*")):
+        dest = API_OUTPUT_IMAGES_DIR / image_path.name
+        shutil.copy2(image_path, dest)
+        image_url_map[image_path.name.lower()] = (
+            f"http://localhost:{API_PORT}/images/{image_path.name}"
+        )
+
+    # Load product metadata index for enrichment.
+    metadata_index = load_review_metadata_index()
+
+    products_by_key: dict[str, dict] = {}
+    for json_path in sorted(json_dir.glob("*.json")):
+        data = json.loads(json_path.read_text(encoding="utf-8"))
+        product = data.get("product", {})
+        product_id = product.get("motion_product_id") or json_path.stem
+        key = normalize_key(product_id) or normalize_key(json_path.stem)
+        metadata = metadata_index.get(key, {})
+        candidates = data.get("candidate_images", [])
+        candidate_by_name = {
+            Path(c.get("local_path") or "").name.lower(): c
+            for c in candidates
+            if c.get("local_path")
+        }
+        products_by_key[key] = {
+            "productId": product_id,
+            "queueKey": product_id,
+            "slug": metadata.get("slug") or json_path.stem,
+            "productName": metadata.get("item_name") or product.get("description") or product_id,
+            "manufacturer": product.get("mfr_name", ""),
+            "manufacturerPartNumber": product.get("mfr_part_number", ""),
+            "partNumber": metadata.get("part_number") or product.get("mfr_part_number") or product_id,
+            "description": metadata.get("meta_description") or product.get("description") or "",
+            "category": product.get("category", ""),
+            "jsonFile": json_path.name,
+            "candidateImages": [],
+            "_candidateByName": candidate_by_name,
+        }
+
+    with rankings_csv.open(encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
+            product_key = normalize_key(row.get("motion_product_id"))
+            if not product_key:
+                continue
+            product_entry = products_by_key.get(product_key)
+            if not product_entry:
+                continue
+
+            image_filename = row.get("image_filename", "")
+            candidate = product_entry["_candidateByName"].get(image_filename.lower(), {})
+            review_image_name = image_filename or Path(candidate.get("local_path") or "").name
+            image_url = image_url_map.get(review_image_name.lower(), "")
+
+            product_entry["candidateImages"].append({
+                "id": f"{product_entry['queueKey']}-{review_image_name}",
+                "fileName": review_image_name,
+                "url": image_url,
+                "rank": int(row.get("image_rank") or 0),
+                "finalScore": float(row.get("final_score") or 0.0),
+                "finalScorePct": row.get("final_score_pct") or "",
+                "aiConfidence": float(row.get("ai_confidence") or 0.0),
+                "aiConfidencePct": row.get("ai_confidence_pct") or "",
+                "textScore": float(row.get("text_score") or 0.0),
+                "textScorePct": row.get("text_score_pct") or "",
+                "sourceName": row.get("source_name") or "",
+                "license": row.get("license") or candidate.get("license") or "",
+                "predictedClass": row.get("ai_class_label") or "",
+                "localPath": candidate.get("local_path") or "",
+            })
+
+    queue = []
+    for product_entry in products_by_key.values():
+        product_entry["candidateImages"].sort(
+            key=lambda img: (img.get("rank") or 9999, -(img.get("finalScore") or 0.0))
+        )
+        product_entry["matchedImageCount"] = len(product_entry["candidateImages"])
+        product_entry["bestConfidence"] = (
+            product_entry["candidateImages"][0]["aiConfidence"]
+            if product_entry["candidateImages"]
+            else 0.0
+        )
+        product_entry.pop("_candidateByName", None)
+        queue.append(product_entry)
+
+    queue.sort(key=lambda item: item["productId"])
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "generatedAt": now,
+        "source": {
+            "rankingsCsv": str(rankings_csv),
+            "jsonDir": str(json_dir),
+        },
+        "products": queue,
+    }
+
+    review_queue_path = job_dir / "review_queue.json"
+    review_queue_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    # Copy demo CSV as the job's input so the API server can reference it.
+    demo_csv_src = PROJECT_ROOT / "src" / "web_scraping" / "Demo_Site_Products.csv"
+    if demo_csv_src.exists():
+        shutil.copy2(demo_csv_src, job_dir / "input.csv")
+
+    job_meta = {
+        "job_id": DEMO_JOB_ID,
+        "description": "Demo pipeline — AMI Bearings 4-product demo site",
+        "row_count": len(products),
+        "headers": ["motion_product_id", "mfr_name", "mfr_part_number", "web_desc", "category"],
+        "review_queue_url": f"http://localhost:{API_PORT}/api/review-queue/{DEMO_JOB_ID}",
+        "created_at": now,
+        "finished_at": now,
+    }
+    (job_dir / "job_meta.json").write_text(json.dumps(job_meta, indent=2), encoding="utf-8")
+
+    return {
+        "job_id": DEMO_JOB_ID,
+        "review_queue_url": job_meta["review_queue_url"],
+        "products": len(queue),
+        "images_copied": len(image_url_map),
+        "job_dir": str(job_dir),
+    }
+
+
 def main() -> None:
     ensure_dirs()
     products = load_products()
@@ -340,6 +489,10 @@ def main() -> None:
         apply_final_ranking(saved_json_files)
         review_summary = export_review_dataset(JSON_DIR, RANKINGS_CSV)
 
+        # Export a job directory the API server (src/api/server.py) can pre-load,
+        # so the React UI Output tab can load the review queue immediately on startup.
+        api_job_summary = export_api_job(JSON_DIR, RANKINGS_CSV, products)
+
         summary = {
             "products_processed": len(saved_json_files),
             "images_dir": str(IMAGES_DIR),
@@ -347,6 +500,8 @@ def main() -> None:
             "json_files": [path.name for path in saved_json_files],
             "rankings_csv": str(RANKINGS_CSV),
             "review_queue_json": review_summary["review_queue_json"],
+            "api_review_queue_url": api_job_summary["review_queue_url"],
+            "demo_csv": str(PROJECT_ROOT / "src" / "web_scraping" / "Demo_Site_Products.csv"),
         }
         (OUTPUT_DIR / "run_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         print(json.dumps(summary, indent=2))

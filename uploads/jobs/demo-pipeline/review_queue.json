@@ -1,0 +1,137 @@
+{
+  "generatedAt": "2026-04-10T02:39:29.599342+00:00",
+  "source": {
+    "rankingsCsv": "/home/aceaid/MotionIndustries-ImageToProduct/src/demo_mfr_site/pipeline_output/rankings.csv",
+    "jsonDir": "/home/aceaid/MotionIndustries-ImageToProduct/src/demo_mfr_site/pipeline_output/json"
+  },
+  "products": [
+    {
+      "productId": "MB2-10",
+      "queueKey": "MB2-10",
+      "slug": "mb2-10",
+      "productName": "Stainless Steel Set Screw Locking Bearing Insert, MB200 Series",
+      "manufacturer": "AMI Bearings Inc.",
+      "manufacturerPartNumber": "MB2-10",
+      "partNumber": "MB2-10",
+      "description": "Browse Item # MB2-10, Stainless Steel Set Screw Locking Bearing Insert, MB200 Series in the AMI Bearings Inc. catalog including Item #,Item Name,Description,Shaft Diameter,D,B,C,R,N,M,G,Z,W,Dynamic Load Rating,Static Load Rating,Weight",
+      "category": "Teel Set Screw Locking Bearing Insert Mb200 Series",
+      "jsonFile": "mb2-10.json",
+      "candidateImages": [
+        {
+          "id": "MB2-10-mb2-10.jpg",
+          "fileName": "mb2-10.jpg",
+          "url": "http://localhost:5050/images/mb2-10.jpg",
+          "rank": 1,
+          "finalScore": 0.626959,
+          "finalScorePct": "62.7%",
+          "aiConfidence": 0.9464,
+          "aiConfidencePct": "94.6%",
+          "textScore": 0.058824,
+          "textScorePct": "5.9%",
+          "sourceName": "Manufacturer Site / AMI BEARINGS INC",
+          "license": "Manufacturer catalog \u2014 proprietary, internal use only",
+          "predictedClass": "BEARINGS",
+          "localPath": "src/demo_mfr_site/pipeline_output/images/mb2-10.jpg"
+        }
+      ],
+      "matchedImageCount": 1,
+      "bestConfidence": 0.9464
+    },
+    {
+      "productId": "MSER204-12",
+      "queueKey": "MSER204-12",
+      "slug": "mser204-12",
+      "productName": "Stainless Steel Set Screw Locking Bearing Insert, MSER200 Series",
+      "manufacturer": "AMI Bearings Inc.",
+      "manufacturerPartNumber": "MSER204-12",
+      "partNumber": "MSER204-12",
+      "description": "Browse Item # MSER204-12, Stainless Steel Set Screw Locking Bearing Insert, MSER200 Series in the AMI Bearings Inc. catalog including Item #,Item Name,Description,Shaft Diameter,D,B,C,R,N,M,G,Z,O,W,J,T,Y Max,Dynamic Load Rating,Static Load Rating,Wei",
+      "category": "El Set Screw Locking Bearing Insert Mser200 Series",
+      "jsonFile": "mser204-12.json",
+      "candidateImages": [
+        {
+          "id": "MSER204-12-mser204-12.jpg",
+          "fileName": "mser204-12.jpg",
+          "url": "http://localhost:5050/images/mser204-12.jpg",
+          "rank": 1,
+          "finalScore": 0.642671,
+          "finalScorePct": "64.3%",
+          "aiConfidence": 0.9883,
+          "aiConfidencePct": "98.8%",
+          "textScore": 0.058824,
+          "textScorePct": "5.9%",
+          "sourceName": "Manufacturer Site / AMI BEARINGS INC",
+          "license": "Manufacturer catalog \u2014 proprietary, internal use only",
+          "predictedClass": "BEARINGS",
+          "localPath": "src/demo_mfr_site/pipeline_output/images/mser204-12.jpg"
+        }
+      ],
+      "matchedImageCount": 1,
+      "bestConfidence": 0.9883
+    },
+    {
+      "productId": "UCST207-22",
+      "queueKey": "UCST207-22",
+      "slug": "ucst207-22",
+      "productName": "Set Screw Locking Wide Slot Take-Up Unit, UCST200 Series",
+      "manufacturer": "AMI Bearings Inc.",
+      "manufacturerPartNumber": "UCST207-22",
+      "partNumber": "UCST207-22",
+      "description": "Browse Item # UCST207-22, Set Screw Locking Wide Slot Take-Up Unit, UCST200 Series in the AMI Bearings Inc. catalog including Item #,Item Name,Description,Shaft Diameter,o,g,p,q,s,b,k,e,a,w,J,x,h,Z,Bi,Bearing,Housing,Lubrication Fitting Tap,Weight",
+      "category": "Crew Locking Wide Slot Take Up Unit Ucst200 Series",
+      "jsonFile": "ucst207-22.json",
+      "candidateImages": [
+        {
+          "id": "UCST207-22-ucst207-22.jpg",
+          "fileName": "ucst207-22.jpg",
+          "url": "http://localhost:5050/images/ucst207-22.jpg",
+          "rank": 1,
+          "finalScore": 0.445234,
+          "finalScorePct": "44.5%",
+          "aiConfidence": 0.4618,
+          "aiConfidencePct": "46.2%",
+          "textScore": 0.058824,
+          "textScorePct": "5.9%",
+          "sourceName": "Manufacturer Site / AMI BEARINGS INC",
+          "license": "Manufacturer catalog \u2014 proprietary, internal use only",
+          "predictedClass": "INDUSTRIAL SUPPLIES",
+          "localPath": "src/demo_mfr_site/pipeline_output/images/ucst207-22.jpg"
+        }
+      ],
+      "matchedImageCount": 1,
+      "bestConfidence": 0.4618
+    },
+    {
+      "productId": "UCT305",
+      "queueKey": "UCT305",
+      "slug": "uct305",
+      "productName": "Set Screw Locking Take-Up Unit, UCT300 Series",
+      "manufacturer": "AMI Bearings Inc.",
+      "manufacturerPartNumber": "UCT305",
+      "partNumber": "UCT305",
+      "description": "Browse Item # UCT305, Set Screw Locking Take-Up Unit, UCT300 Series in the AMI Bearings Inc. catalog including Item #,Item Name,Description,Shaft Diameter,o,g,p,q,s,b,k,e,a,w,J,x,h,Bi,Z,Bearing,Housing,Lubrication Fitting Tap,Weight",
+      "category": "Set Screw Locking Take Up Unit Uct300 Series",
+      "jsonFile": "uct305.json",
+      "candidateImages": [
+        {
+          "id": "UCT305-uct305.jpg",
+          "fileName": "uct305.jpg",
+          "url": "http://localhost:5050/images/uct305.jpg",
+          "rank": 1,
+          "finalScore": 0.368546,
+          "finalScorePct": "36.9%",
+          "aiConfidence": 0.2573,
+          "aiConfidencePct": "25.7%",
+          "textScore": 0.058824,
+          "textScorePct": "5.9%",
+          "sourceName": "Manufacturer Site / AMI BEARINGS INC",
+          "license": "Manufacturer catalog \u2014 proprietary, internal use only",
+          "predictedClass": "INDUSTRIAL SUPPLIES",
+          "localPath": "src/demo_mfr_site/pipeline_output/images/uct305.jpg"
+        }
+      ],
+      "matchedImageCount": 1,
+      "bestConfidence": 0.2573
+    }
+  ]
+}

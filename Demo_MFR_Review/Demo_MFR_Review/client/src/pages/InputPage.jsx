@@ -42,7 +42,7 @@ export default function InputPage({ rawHeaders, rawRows, onLoadExcel }) {
       setPipelineLog([]);
       setPipelineError(null);
     } catch (err) {
-      setError("Failed to read file."); console.error(err);
+      setError(err.message || "Failed to read file."); console.error(err);
     } finally { setLoading(false); }
   }, [onLoadExcel]);
 

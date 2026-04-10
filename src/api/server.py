@@ -159,6 +159,39 @@ _jobs: dict[str, dict] = {}
 _jobs_lock = threading.Lock()
 
 
+def _preload_persisted_jobs() -> None:
+    """
+    Scan uploads/jobs/ for any directories that contain both job_meta.json and
+    review_queue.json. These are pre-built jobs (e.g. from run_demo_pipeline.py)
+    that should be immediately available without a pipeline run.
+    """
+    for meta_path in sorted(JOBS_DIR.glob("*/job_meta.json")):
+        job_id = meta_path.parent.name
+        review_queue_path = meta_path.parent / "review_queue.json"
+        if not review_queue_path.exists():
+            continue
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        with _jobs_lock:
+            if job_id not in _jobs:
+                _jobs[job_id] = {
+                    "status": "done",
+                    "csv_path": str(meta_path.parent / "input.csv"),
+                    "review_queue_path": str(review_queue_path),
+                    "row_count": meta.get("row_count", 0),
+                    "headers": meta.get("headers", []),
+                    "log": [meta.get("description", f"Pre-loaded job: {job_id}")],
+                    "created_at": meta.get("created_at", datetime.now(timezone.utc).isoformat()),
+                    "finished_at": meta.get("finished_at", datetime.now(timezone.utc).isoformat()),
+                }
+                log.info("Pre-loaded persisted job: %s", job_id)
+
+
+_preload_persisted_jobs()
+
+
 # ── File parsing helpers ───────────────────────────────────────────────────────
 
 def _normalise_columns(df: pd.DataFrame) -> pd.DataFrame:
