@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AMI Bearings Review Queue</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="topbar"><div class="site-shell topbar-inner"><a class="brand" href="index.html">Motion Industries Demo<strong>AMI Bearings</strong></a><nav class="topnav"><a href="index.html">Catalog</a><a href="review.html">Review Queue</a></nav></div></header>
+  <main class="site-shell">
+    <section class="masthead">
+      <div class="masthead-grid">
+        <div>
+          <p class="kicker">Review Frontend</p>
+          <h1 class="hero-title">Manual review queue built from ranked demo pipeline output.</h1>
+          <p class="hero-copy">This page reads the normalized review dataset generated from pipeline rankings, JSON records, and output images. Review decisions stay local and can be exported as JSON.</p>
+        </div>
+        <aside class="summary-panel">
+          <p class="eyebrow">Review Source</p>
+          <h2>Pipeline-backed queue</h2>
+          <p>Run <code>./run_pipeline_b.sh</code> first so the demo pipeline can regenerate the ranked artifacts and review dataset.</p>
+        </aside>
+      </div>
+    </section>
+    <section id="review-app" class="review-layout">
+      <article class="review-panel">
+        <p class="eyebrow">Queue</p>
+        <div class="empty-state">Loading review queue…</div>
+      </article>
+      <aside class="review-panel">
+        <p class="eyebrow">Selected Product</p>
+        <div class="empty-state">Waiting for review data…</div>
+      </aside>
+    </section>
+  </main>
+  <footer class="site-shell footer">
+    <p>The review dataset is expected at <code>assets/data/review_queue.json</code>. Exported decisions remain local unless they are written back by a later backend integration.</p>
+  </footer>
+  <script src="assets/review.js"></script>
+</body>
+</html>

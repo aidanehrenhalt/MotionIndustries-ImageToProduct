@@ -1,3 +1,13 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# DEPRECATED — This script has known bugs (wrong image size, wrong label column,
+# incorrect flattened-size calculation, missing model save).
+#
+# Use the canonical training script instead:
+#     python src/Image_Classifier/train.py --manifest data/training_manifest.csv
+#
+# See docs/PIPELINE_RUNBOOK.md for the full pipeline.
+# ──────────────────────────────────────────────────────────────────────────────
+
 import os
 import pandas as pd
 import torch

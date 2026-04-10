@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T16:41:49.643822+00:00",
+  "product": {
+    "motion_product_id": "s13600726",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "MUCHPL204-12RFCB",
+    "description": "",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}
