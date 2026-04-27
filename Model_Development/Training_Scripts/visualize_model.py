@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 import os
 
-model_name = "five_conv_model_2.tar"
+model_name = "three_conv_model_1.tar"
 
 checkpoint_path = os.path.join("Model_Checkpoints", model_name)
 

@@ -14,6 +14,10 @@ data/
 *.log
 *.out
 *.err
+
+# --- Model Checkpoints ---
+Model_Development/Training_Scripts/Model_Checkpoints/*.tar
+
 .cache/
 
 # --- OS ---

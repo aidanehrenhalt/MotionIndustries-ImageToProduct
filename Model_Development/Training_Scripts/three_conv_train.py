@@ -12,7 +12,7 @@ from torchvision import transforms
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-model_name = "five_conv_model_3.tar"
+model_name = "three_conv_model_1.tar"
 
 IMG_H = 500
 IMG_W = 500
@@ -83,21 +83,12 @@ model = nn.Sequential(
         nn.ReLU(),
         nn.Dropout(0.2),
         nn.MaxPool2d(2, stride = 2),
-        nn.Conv2d(in_channels=50, out_channels=75, kernel_size=3, stride=1, padding=1),
-        nn.BatchNorm2d(75),
+        nn.Conv2d(in_channels=50, out_channels=50, kernel_size=3, stride=1, padding=1),
+        nn.BatchNorm2d(50),
         nn.ReLU(),
-        nn.MaxPool2d(2, stride = 2),
-        nn.Conv2d(in_channels=75, out_channels=75, kernel_size=3, stride=2, padding=1),
-        nn.BatchNorm2d(75),
-        nn.ReLU(),
-        nn.MaxPool2d(2, stride = 2),
-        nn.Conv2d(in_channels=75, out_channels=75, kernel_size=3, stride=2, padding=1),
-        nn.BatchNorm2d(75),
-        nn.ReLU(),
-        nn.Dropout(0.2),
         nn.MaxPool2d(2, stride = 2),
         nn.Flatten(),
-        nn.Linear(1200, 512),
+        nn.Linear(192200, 512),
         nn.ReLU(),
         nn.Dropout(0.3),
         nn.Linear(512, N_CLASSES),

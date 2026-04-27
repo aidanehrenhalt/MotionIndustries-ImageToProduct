@@ -12,7 +12,7 @@ from torchvision import transforms
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-model_name = "five_conv_model_3.tar"
+model_name = "five_conv_model_focal_loss.tar"
 
 IMG_H = 500
 IMG_W = 500
@@ -104,7 +104,7 @@ model = nn.Sequential(
         )
 
 model = model.to(device)
-loss_fn = nn.CrossEntropyLoss()
+# loss_fn = nn.CrossEntropyLoss()
 test_loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
@@ -118,7 +118,7 @@ def save_checkpoint(model, optimizer, epoch, train_loss, test_loss, train_acc, t
         'train_acc': train_acc,
         'test_acc': test_acc
     }, save_path)
-
+    
 def load_checkpoint(model, optimizer, load_path):
     checkpoint = torch.load(load_path)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -146,8 +146,12 @@ def train():
         x = x.to(device)
         y = y.to(device)
         output = model(x)
+
+        y_one_hot = F.one_hot(y, num_classes=N_CLASSES).float()
+
         optimizer.zero_grad()
-        batch_loss = loss_fn(output, y)
+        #batch_loss = loss_fn(output, y)
+        batch_loss = sigmoid_focal_loss(output, y_one_hot, alpha=0.25, gamma=2.0, reduction='mean')
         batch_loss.backward()
         optimizer.step()
         
