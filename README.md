@@ -399,7 +399,6 @@ Top-level:
 - [`PIPELINE_GUIDE.md`](PIPELINE_GUIDE.md): extended end-to-end pipeline guide
 - [`FlowChartImage-To-Text.md`](FlowChartImage-To-Text.md): visual flow chart of the stages
 - [`Demo_MFR_Review-PipelineIntegration.md`](Demo_MFR_Review-PipelineIntegration.md): how the React UI integrates with the pipeline
-- [`README-textsearch.md`](README-textsearch.md): standalone text-based search notes
 
 `docs/`:
 

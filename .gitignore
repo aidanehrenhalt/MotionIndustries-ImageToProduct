@@ -30,6 +30,7 @@ node_modules/
 # Claude Code / Codex
 */.claude/*
 */.codex/*
+.codex
 
 # Temporary crawl runtime artifacts
 .crawl4ai_runtime/
