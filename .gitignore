@@ -2,6 +2,10 @@
 .env
 .venv/
 
+# Local Output Folder
+output/
+src/demo_mfr_site/pipeline_output/
+
 # --- Python ---
 __pycache__/
 secrets.py
@@ -19,6 +23,14 @@ data/
 .DS_Store
 Thumbs.db
 
-# Claude Code
+# --- React.js ---
+build/
+node_modules/
 
+# Claude Code / Codex
 */.claude/*
+*/.codex/*
+.codex
+
+# Temporary crawl runtime artifacts
+.crawl4ai_runtime/

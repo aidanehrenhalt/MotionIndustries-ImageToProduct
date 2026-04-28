@@ -51,3 +51,17 @@ def class_index_to_description(class_index: int) -> str:
     Returns ``"UNKNOWN"`` for out-of-range values.
     """
     return PGC1_CLASSES.get(class_index + 1, "UNKNOWN")
+
+
+def get_expected_classes(product: dict) -> set[int]:
+    """Return the set of 0-indexed class indices valid for this product's PGC.
+
+    Returns an empty set if the PGC is absent or unmapped — callers must not
+    penalize candidates when the set is empty.
+    """
+    pgc_raw = product.get("pgc", "")
+    if pgc_raw:
+        result = pgc_code_to_label(pgc_raw)
+        if result is not None:
+            return {result}
+    return set()
