@@ -8,11 +8,14 @@ pip install requests beautifulsoup4 Pillow lxml - NOTE: These are in requirement
 
 For now, no need for Selenium. Focusing on APIs.
 
-Usage: 
-python web_scraper.py --csv test-products_sample.csv        # Scrape images for all products listed and download images
+Usage:
+python web_scraper.py --csv test-products_sample.csv                     # Scrape images for all products
+python web_scraper.py --from-es --mfr-filter SKF --es --minio --classify # Full pipeline with classification
 """
 
+import concurrent.futures
 import os
+import sys
 import json
 import time
 import hashlib
@@ -26,7 +29,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import quote, quote_plus, urlparse
 
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, NotFoundError, ConnectionError as ESConnectionError
 from elasticsearch.helpers import bulk
 
 import boto3
@@ -162,23 +165,32 @@ def load_product_catalog(csv_path: str) -> list[dict]:
                     "motion_product_id": (
                         row.get("[<ID>]") or row.get("<ID>") or row.get("ID") or ""
                     ).strip(),
-                    "item_number": row.get("Item Number", "").strip(),
+                    "item_number": (
+                        row.get("Item Number") or row.get("ITEM_NUMBER") or ""
+                    ).strip(),
                     "enterprise_name": (
                         row.get("ENTERPRISE_NAME") or row.get("Enterprise Name") or ""
                     ).strip(),
                     "mfr_name": (
                         row.get("MFR_NAME") or row.get("Manufacturer Name") or ""
                     ).strip(),
-                    "mfr_part_number": row.get("Manufacturer Part Number", "").strip(),
+                    "mfr_part_number": (
+                        row.get("Manufacturer Part Number") or row.get("MFR_PART_NUMBER") or ""
+                    ).strip(),
                     "category": (
                         row.get("PGC4 Description") or row.get("PGC Description") or ""
                     ).strip(),
                     "web_desc": (
                         row.get("Web Description") or row.get("Web Product Description") or ""
                     ).strip(),
-                    "internal_description": row.get("Motion Internal Description", "").strip(),
+                    "internal_description": (
+                        row.get("Motion Internal Description")
+                        or row.get("MOTION_INTERNAL_DESCRIPTION") or ""
+                    ).strip(),
                     "pgc": (row.get("PGC4") or row.get("PGC") or "").strip(),
-                    "primary_image_filename": row.get("PrimaryImageFilename", "").strip(),
+                    "primary_image_filename": (
+                        row.get("PrimaryImageFilename") or row.get("PRIMARYIMAGEFILENAME") or ""
+                    ).strip(),
                 }
 
                 # Temporary: use simple broad keywords for Wikimedia/OpenVerse
@@ -639,6 +651,7 @@ def scrape_product_images(
             "mfr_part_number": product["mfr_part_number"],
             "description": product.get("web_desc") or product.get("description", ""),
             "category": product["category"],
+            "pgc": product.get("pgc", ""),
         },
         "scrape_summary": {
             "total_images_found": len(raw_images),
@@ -743,6 +756,62 @@ def index_to_elasticsearch(record: dict, es: Elasticsearch, product_row: dict):
     log.info(f"[ES] Product {pid} indexed with scrape_summary")
 
 
+def push_predictions_to_es(json_files: list, es: Elasticsearch) -> None:
+    """
+    After classify_json_files() has written predicted_class into the JSON files,
+    sync those predictions back into the mi_candidate_images Elasticsearch index.
+
+    Accepts a list of specific Path objects scoped to the current scrape run
+    rather than scanning an entire directory, so historical artifacts are not
+    accidentally reprocessed.
+
+    Uses the same SHA1(product_id:image_url) document-ID scheme as
+    index_to_elasticsearch() so every update lands on the correct document.
+    """
+    updated = 0
+    for json_file in json_files:
+        json_file = Path(json_file)
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        pid = data.get("product", {}).get("motion_product_id", "")
+        for img in data.get("candidate_images", []):
+            if "predicted_class" not in img:
+                continue
+            doc_id = hashlib.sha1(
+                f"{pid}:{img['image_url']}".encode()
+            ).hexdigest()
+            try:
+                es.update(
+                    index="mi_candidate_images",
+                    id=doc_id,
+                    doc={"predicted_class": img["predicted_class"]},
+                )
+                updated += 1
+            except NotFoundError:
+                log.debug(
+                    f"[ES] Doc {doc_id} not found (stale) — "
+                    f"product={pid} url={img.get('image_url', '')}"
+                )
+            except ESConnectionError as exc:
+                log.error(
+                    f"[ES] Connection error pushing predicted_class: "
+                    f"doc_id={doc_id} product={pid} "
+                    f"{type(exc).__name__}: {exc}"
+                )
+            except Exception as exc:
+                log.warning(
+                    f"[ES] Failed to push predicted_class: "
+                    f"doc_id={doc_id} product={pid} "
+                    f"image_url={img.get('image_url', '')} "
+                    f"{type(exc).__name__}: {exc}"
+                )
+
+    log.info(f"[ES] Pushed predicted_class for {updated} images into mi_candidate_images")
+
+
 def print_summary(record: dict):
     product = record["product"]
     summary = record["scrape_summary"]
@@ -786,6 +855,8 @@ if __name__ == "__main__":
                         help="Enable Tier 2 generic og:image fallback for unknown manufacturers (requires Playwright)")
     parser.add_argument("--mfr-only", action="store_true",
                         help="Skip Wikimedia/OpenVerse; use only manufacturer scrapers (requires --mfr-scraping)")
+    parser.add_argument("--classify", action="store_true",
+                        help="Run the CNN image classifier on downloaded images after scraping and push predicted_class to JSON (and ES if --es is set). Requires PyTorch + torchvision.")
     args = parser.parse_args()
 
     # Validate source: exactly one of --csv or --from-es is required
@@ -893,3 +964,51 @@ if __name__ == "__main__":
         print(f"  Images {IMAGES_DIR.resolve()}")
     if es:
         print(f"  Elasticsearch  {es_url} (mi_products + mi_candidate_images)")
+
+    # ── Optional post-scrape classification ───────────────────────────────────
+    if args.classify:
+        # Resolve model path relative to this script's location so it works
+        # regardless of the current working directory.
+        _script_dir = Path(__file__).resolve().parent
+        _model_path = _script_dir.parent / "Image_Classifier" / "trained_model.pth"
+
+        if not _model_path.exists():
+            log.error(
+                f"[classify] trained_model.pth not found at {_model_path}. "
+                "Run from the project root or check that src/Image_Classifier/trained_model.pth exists."
+            )
+        else:
+            try:
+                _classifier_dir = str(_script_dir.parent / "Image_Classifier")
+                if _classifier_dir not in sys.path:
+                    sys.path.insert(0, _classifier_dir)
+                import classify_json_images as _mod  # noqa: E402
+
+                # Pass 1 (parallel): Image Classifier (CNN) + Text Analysis (ranker)
+                # run concurrently — both are independent branches per the pipeline
+                # flowchart; apply_final_ranking gates on both completing.
+                log.info("[classify] Running image classifier and text ranker in parallel...")
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as _pool:
+                    _f_classify = _pool.submit(
+                        _mod.classify_json_files, saved_files, _model_path, s3_client=s3
+                    )
+                    _f_rank = _pool.submit(_mod.rank_json_files, saved_files)
+                    n_classified = _f_classify.result()
+                    n_ranked    = _f_rank.result()
+
+                # Pass 2: combine classifier + ranker signals into final_score / final_rank
+                log.info("[classify] Applying final ranking...")
+                n_final = _mod.apply_final_ranking(saved_files)
+
+                print(f"\n  Classified {n_classified} images  (predicted_class + classifier_confidence)")
+                print(f"  Ranked     {n_ranked} images  (ranker_score + score_breakdown)")
+                print(f"  Final rank assigned to {n_final} images  (final_score + final_rank)")
+
+                if es:
+                    push_predictions_to_es(saved_files, es)
+                    print(f"  predicted_class synced to Elasticsearch mi_candidate_images")
+            except ImportError as e:
+                log.error(
+                    f"[classify] Could not import classifier: {e}. "
+                    "Install PyTorch: pip install torch torchvision"
+                )

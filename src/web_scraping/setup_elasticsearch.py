@@ -149,6 +149,10 @@ IMAGES_MAPPINGS = {
                 "preliminary_score":             {"type": "float"},
             },
         },
+
+        # ── Image classification ───────────────────────────────────────────────
+        # Class index output by the CNN (0-7); -1 means not yet classified.
+        "predicted_class": {"type": "integer"},
     },
 }
 
