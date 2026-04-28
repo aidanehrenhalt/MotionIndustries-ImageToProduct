@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-13T16:21:47.724074+00:00",
+  "product": {
+    "motion_product_id": "s10808018",
+    "mfr_name": "Dodge",
+    "mfr_part_number": "22226KC3AH",
+    "description": "Spherical Roller Bearing - 130 mm ID, 230 mm OD, 64 mm Width, Tapered 1:12 Bore, Open",
+    "category": "ST.SM.SPHER.THRU SIZE 48"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

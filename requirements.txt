@@ -1,22 +1,56 @@
-# Core
+# ==============================
+# Core Scraping & Parsing
+# ==============================
+beautifulsoup4
+lxml
+requests
 
-
-# Web Scraping
-
-
-# Image Processing
-
-
-# Machine Learning
-pandas
-openpyxl
-#torch
-#torch torchvision
-#Check torch documentation to determine correct installation for torch and torchvision
-
+# ==============================
+# Image Handling
+# ==============================
 Pillow
 
-# Utilities
+# ==============================
+# Browser Automation
+# ==============================
+# Selenium (Manufacturer Website Scraping)
+selenium>=4.0
+webdriver-manager
 
+# Playwright (Tier 2 JS-heavy site rendering)
+# Run `playwright install chromium` after pip install.
+playwright>=1.40
 
-# 
+# ==============================
+# Search & Storage Integrations
+# ==============================
+# Elasticsearch
+elasticsearch>=8.0.0,<9.0.0
+
+# Object Storage (MinIO / S3-compatible)
+boto3>=1.34
+
+# ==============================
+# Data & Spreadsheet Utilities
+# ==============================
+pandas
+openpyxl
+
+# ==============================
+# ML / Image Classification
+# ==============================
+# Image classification (CNN model — web_scraper.py --classify flag)
+# Install torch from https://pytorch.org/get-started/locally/ for the correct CUDA/CPU variant.
+# CPU-only example: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# NumPy is pinned below 2.0 because the current torch/torchvision setup used
+# by this project fails classification transforms with NumPy 2.x in validation.
+numpy<2
+
+# Check torch documentation to determine correct installation for torch and torchvision
+torch>=2.0
+torchvision>=0.15
+
+# ==============================
+# Development / Testing
+# ==============================
+pytest>=8.0

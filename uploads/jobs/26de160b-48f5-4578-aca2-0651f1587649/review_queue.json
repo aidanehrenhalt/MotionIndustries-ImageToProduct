@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-04-09T22:50:54.195092+00:00",
+  "source": {
+    "rankingsCsv": "/home/aceaid/MotionIndustries-ImageToProduct/output/rankings.csv",
+    "jsonDir": "/home/aceaid/MotionIndustries-ImageToProduct/output/json"
+  },
+  "products": [
+    {
+      "productId": "_20260409_185049",
+      "queueKey": "_20260409_185049",
+      "slug": "_20260409_185049",
+      "productName": "_20260409_185049",
+      "manufacturer": "",
+      "manufacturerPartNumber": "",
+      "partNumber": "_20260409_185049",
+      "description": "",
+      "category": "",
+      "jsonFile": "_20260409_185049.json",
+      "candidateImages": [],
+      "matchedImageCount": 0,
+      "bestConfidence": 0.0
+    },
+    {
+      "productId": "s10807860",
+      "queueKey": "s10807860",
+      "slug": "s10807860",
+      "productName": "Spherical Roller Bearing - 75 mm ID, 160 mm OD, 37 mm Width, Straight Bore, C3",
+      "manufacturer": "SKF",
+      "manufacturerPartNumber": "21315 E/C3",
+      "partNumber": "21315 E/C3",
+      "description": "Spherical Roller Bearing - 75 mm ID, 160 mm OD, 37 mm Width, Straight Bore, C3",
+      "category": "ST.SM.SPHER.THRU SIZE 48",
+      "jsonFile": "s10807860_20260331_131039.json",
+      "candidateImages": [],
+      "matchedImageCount": 0,
+      "bestConfidence": 0.0
+    },
+    {
+      "productId": "s10807876",
+      "queueKey": "s10807876",
+      "slug": "s10807876",
+      "productName": "Spherical Roller Bearing - 190 mm ID, 290 mm OD, 75 mm Width, Tapered 1:12 Bore, Open, C3",
+      "manufacturer": "NSK",
+      "manufacturerPartNumber": "23038CAMKC3W507",
+      "partNumber": "23038CAMKC3W507",
+      "description": "Spherical Roller Bearing - 190 mm ID, 290 mm OD, 75 mm Width, Tapered 1:12 Bore, Open, C3",
+      "category": "ST.SM.SPHER.THRU SIZE 48",
+      "jsonFile": "s10807876_20260331_131043.json",
+      "candidateImages": [],
+      "matchedImageCount": 0,
+      "bestConfidence": 0.0
+    }
+  ]
+}

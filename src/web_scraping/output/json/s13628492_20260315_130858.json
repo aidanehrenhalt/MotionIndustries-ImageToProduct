@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T17:08:50.040077+00:00",
+  "product": {
+    "motion_product_id": "s13628492",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "UEECH206-19NPMZ20RF",
+    "description": "",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "Manufacturer Site / AMI BEARINGS INC"
+    ],
+    "avg_preliminary_score": 0.15
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://catalog.amibearings.com/ImgMedium/UEECH200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgMedium/UEECH200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/accu-loc-concentric-collar-locking-9/collar-locking-hanger-bearing-unit-ueech200-series/ueech206-19",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Accu-Loc® Concentric Collar Locking Hanger Bearing Unit, UEECH200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13628492/s13628492_00_5a43cacb.jpg",
+      "file_size_bytes": 8387,
+      "actual_width": 200,
+      "actual_height": 109,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:50.040077+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UE.JPG",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UE.JPG",
+      "source_page": "https://catalog.amibearings.com/item/accu-loc-concentric-collar-locking-9/collar-locking-hanger-bearing-unit-ueech200-series/ueech206-19",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Accu-Loc® Concentric Collar Locking Bearing Insert, UE200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13628492/s13628492_01_6669a09e.jpg",
+      "file_size_bytes": 5341,
+      "actual_width": 120,
+      "actual_height": 90,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:50.040077+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/UEECH200.jpg",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/UEECH200.jpg",
+      "source_page": "https://catalog.amibearings.com/item/accu-loc-concentric-collar-locking-9/collar-locking-hanger-bearing-unit-ueech200-series/ueech206-19",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Accu-Loc® Concentric Collar Locking Hanger Bearing Unit, UEECH200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13628492/s13628492_02_fe3b04ab.jpg",
+      "file_size_bytes": 4197,
+      "actual_width": 120,
+      "actual_height": 65,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:50.040077+00:00"
+    }
+  ]
+}

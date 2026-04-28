@@ -1,0 +1,15 @@
+{
+  "job_id": "demo-pipeline",
+  "description": "Demo pipeline \u2014 AMI Bearings 4-product demo site",
+  "row_count": 4,
+  "headers": [
+    "motion_product_id",
+    "mfr_name",
+    "mfr_part_number",
+    "web_desc",
+    "category"
+  ],
+  "review_queue_url": "http://localhost:5050/api/review-queue/demo-pipeline",
+  "created_at": "2026-04-10T02:39:29.599342+00:00",
+  "finished_at": "2026-04-10T02:39:29.599342+00:00"
+}

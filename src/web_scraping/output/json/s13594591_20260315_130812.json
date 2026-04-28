@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T17:08:02.893396+00:00",
+  "product": {
+    "motion_product_id": "s13594591",
+    "mfr_name": "AMI BEARINGS INC",
+    "mfr_part_number": "BCFTR208",
+    "description": "Three-Bolt Triangle Flange Ball Bearing Unit - 40 mm Bore, 3-Bolt Triangle Flange, Set Screw Locking, Cast Iron Housing Material, Non-Expansion Bearing (Fixed)",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 3,
+    "sources_queried": [
+      "Manufacturer Site / AMI BEARINGS INC"
+    ],
+    "avg_preliminary_score": 0.15
+  },
+  "candidate_images": [
+    {
+      "index": 0,
+      "image_url": "https://catalog.amibearings.com/ImgMedium/Eccentric-Collar-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series.JPG",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgMedium/Eccentric-Collar-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series.JPG",
+      "source_page": "https://catalog.amibearings.com/viewitems/set-screw-locking-4/ng-triangle-three-bolt-flange-unit-bcftr200-series",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Eccentric Collar Locking Triangle Three-Bolt Flange Unit, BCFTR200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13594591/s13594591_00_ee746990.jpg",
+      "file_size_bytes": 26764,
+      "actual_width": 188,
+      "actual_height": 200,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:02.893396+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://catalog.amibearings.com/ImgMedium/Set-Scrw-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series-2.JPG",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgMedium/Set-Scrw-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series-2.JPG",
+      "source_page": "https://catalog.amibearings.com/viewitems/set-screw-locking-4/ng-triangle-three-bolt-flange-unit-bcftr200-series",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Set Scrw Locking Triangle Three-Bolt Flange Unit, BCFTR200 Series-2",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13594591/s13594591_01_bd5b737b.jpg",
+      "file_size_bytes": 33807,
+      "actual_width": 200,
+      "actual_height": 150,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:02.893396+00:00"
+    },
+    {
+      "index": 2,
+      "image_url": "https://catalog.amibearings.com/ImgSmall/Eccentric-Collar-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series.JPG",
+      "thumbnail_url": "https://catalog.amibearings.com/ImgSmall/Eccentric-Collar-Locking-Triangle-Three-Bolt-Flange-Unit--BCFTR200-Series.JPG",
+      "source_page": "https://catalog.amibearings.com/viewitems/set-screw-locking-4/ng-triangle-three-bolt-flange-unit-bcftr200-series",
+      "source_name": "Manufacturer Site / AMI BEARINGS INC",
+      "title": "Eccentric Collar Locking Triangle Three-Bolt Flange Unit, BCFTR200 Series",
+      "license": "Manufacturer catalog — proprietary, internal use only",
+      "attribution": "AMI BEARINGS INC",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": true,
+      "storage_type": "minio",
+      "local_path": "images/s13594591/s13594591_02_2c4c0eca.jpg",
+      "file_size_bytes": 17163,
+      "actual_width": 85,
+      "actual_height": 90,
+      "actual_format": "JPEG",
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-15T17:08:02.893396+00:00"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-13T16:24:53.637897+00:00",
+  "product": {
+    "motion_product_id": "s10807910",
+    "mfr_name": "Timken",
+    "mfr_part_number": "23076EMBW507C08",
+    "description": "Spherical Roller Bearing - 380 mm ID, 560 mm OD, 135 mm Width, Straight Bore, Open, C0",
+    "category": "ST.MED.SPHER.52 THRU 96"
+  },
+  "scrape_summary": {
+    "total_images_found": 3,
+    "images_downloaded": 0,
+    "sources_queried": [
+      "Manufacturer Site / Timken"
+    ],
+    "avg_preliminary_score": 0.267
+  },
+  "candidate_images": [
+    {
+      "index": 2,
+      "image_url": "https://cad.timken.com/ImgSmall/Timken-Marine-Tugboat-and-Ship-863x871.jpg",
+      "thumbnail_url": "https://cad.timken.com/ImgSmall/Timken-Marine-Tugboat-and-Ship-863x871.jpg",
+      "source_page": "https://cad.timken.com/search?q=23076EMBW507C08",
+      "source_name": "Manufacturer Site / Timken",
+      "title": "Timken-Marine-Tugboat-and-Ship-863x871",
+      "license": "Product images only — CAD drawings restricted per Timken ToS",
+      "attribution": "Timken",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": true,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.5
+      },
+      "scraped_at": "2026-03-13T16:24:53.637897+00:00"
+    },
+    {
+      "index": 0,
+      "image_url": "https://cad.timken.com/ImgSmall/Main-Image---spherical-1.jpg",
+      "thumbnail_url": "https://cad.timken.com/ImgSmall/Main-Image---spherical-1.jpg",
+      "source_page": "https://cad.timken.com/search?q=23076EMBW507C08",
+      "source_name": "Manufacturer Site / Timken",
+      "title": "Main Image - spherical-1",
+      "license": "Product images only — CAD drawings restricted per Timken ToS",
+      "attribution": "Timken",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-13T16:24:53.637897+00:00"
+    },
+    {
+      "index": 1,
+      "image_url": "https://cad.timken.com/ImgSmall/Main-Image-ConeDrive.jpg",
+      "thumbnail_url": "https://cad.timken.com/ImgSmall/Main-Image-ConeDrive.jpg",
+      "source_page": "https://cad.timken.com/search?q=23076EMBW507C08",
+      "source_name": "Manufacturer Site / Timken",
+      "title": "Main Image Power Transmission",
+      "license": "Product images only — CAD drawings restricted per Timken ToS",
+      "attribution": "Timken",
+      "tags": [],
+      "width": null,
+      "height": null,
+      "mime_type": "",
+      "downloaded": false,
+      "storage_type": null,
+      "local_path": null,
+      "file_size_bytes": null,
+      "actual_width": null,
+      "actual_height": null,
+      "actual_format": null,
+      "download_error": null,
+      "confidence_hints": {
+        "has_product_keywords_in_title": false,
+        "is_permissively_licensed": false,
+        "meets_minimum_resolution": false,
+        "source_reliability": "high",
+        "preliminary_score": 0.15
+      },
+      "scraped_at": "2026-03-13T16:24:53.637897+00:00"
+    }
+  ]
+}

@@ -59,7 +59,7 @@ export default function App() {
 
   const pageInfo = {
     input: { title: "Input UI", desc: "Upload the product Excel — this feeds into the web scraper pipeline." },
-    review: { title: "Output UI", desc: "Connect a live output folder and review parts built by matching /json metadata to /images candidate files." },
+    review: { title: "Output UI", desc: "Load the pipeline review queue and review ranked candidate images for each product." },
     history: { title: "Review History", desc: "Browse review decisions captured during this browser session." },
   };
   const info = pageInfo[activePage] || pageInfo.input;

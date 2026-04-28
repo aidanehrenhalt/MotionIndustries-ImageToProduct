@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scraped_at": "2026-03-15T16:09:57.174884+00:00",
+  "product": {
+    "motion_product_id": "s15591963",
+    "mfr_name": "NTN",
+    "mfr_part_number": "F-UCFLR208/LP03",
+    "description": "Two-Bolt Flange Ball Bearing Unit - 40 mm Bore, 2-Bolt Flange, Set Screw Locking, Thermoplastic Housing Material, Non-Expansion Bearing (Fixed)",
+    "category": "OTHER BALL BRG.MTD.UNITS"
+  },
+  "scrape_summary": {
+    "total_images_found": 0,
+    "images_downloaded": 0,
+    "sources_queried": [],
+    "avg_preliminary_score": 0.0
+  },
+  "candidate_images": []
+}

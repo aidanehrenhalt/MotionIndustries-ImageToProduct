@@ -30,8 +30,14 @@ export async function parseFile(file) {
   }
 
   const xlsx = await loadXLSX();
-  const buffer = await file.arrayBuffer();
-  const workbook = xlsx.read(buffer, { type: "array" });
+  let workbook;
+  if (ext === "csv") {
+    const text = await file.text();
+    workbook = xlsx.read(text, { type: "string" });
+  } else {
+    const buffer = await file.arrayBuffer();
+    workbook = xlsx.read(buffer, { type: "array" });
+  }
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const raw = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: "" });
   if (raw.length === 0) throw new Error("File is empty");
