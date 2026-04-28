@@ -1,55 +1,87 @@
-# Motion Industries Image-to-Product
+# Motion Industries — Image-to-Product Pipeline
 
-Repository for validating the full image-to-product pipeline:
+End-to-end system for automatically sourcing, classifying, ranking, and human-reviewing candidate product images for the Motion Industries catalog. Given a product record (manufacturer name, part number, description), the pipeline scrapes candidate images, classifies them with a trained CNN, ranks them by fused confidence score, and presents results in a React-based review interface for human approval.
 
-- Web scraper
-- Image classifier
-- Text analysis / metadata ranker
-- Final fused ranking
+---
 
-The main end-to-end entrypoint is [`src/web_scraping/web_scraper.py`](src/web_scraping/web_scraper.py). When you run it with `--classify`, it performs:
+## Table of Contents
 
-1. Scraping
-2. CNN image classification
-3. Text-based ranking
-4. Final score + final rank assignment
+1. [What This Project Does](#1-what-this-project-does)
+2. [System Architecture](#2-system-architecture)
+3. [Prerequisites](#3-prerequisites)
+4. [Installation and Setup](#4-installation-and-setup)
+5. [Running the Pipeline](#5-running-the-pipeline)
+   - [Pipeline A — Full Web Scrape (CSV Input)](#pipeline-a--full-web-scrape-csv-input)
+   - [Pipeline B — Demo Site (Recommended First Run)](#pipeline-b--demo-site-recommended-first-run)
+   - [Pipeline C — Elasticsearch-Backed](#pipeline-c--elasticsearch-backed)
+6. [React Review UI](#6-react-review-ui)
+7. [Configuration Reference](#7-configuration-reference)
+8. [Verifying Outputs](#8-verifying-outputs)
+9. [Resetting the Environment](#9-resetting-the-environment)
+10. [Troubleshooting](#10-troubleshooting)
+11. [Documentation Map](#11-documentation-map)
+12. [Project Backlog and Status](#12-project-backlog-and-status)
+13. [Team and Contacts](#13-team-and-contacts)
 
-## Pipeline Architecture
+---
+
+## 1. What This Project Does
+
+Motion Industries sells millions of industrial products, many of which lack product images on their website. Missing images reduce customer confidence and increase manual sourcing burden on the content team.
+
+This pipeline automates that process:
+
+1. **Scrapes** candidate images from Wikimedia Commons, OpenVerse, and (optionally) manufacturer catalog pages.
+2. **Classifies** each image with a pre-trained 8-class CNN (bearings, seals, power transmission, etc.).
+3. **Ranks** candidates by fusing CNN confidence, class-category match, text similarity, and heuristic score into a single `final_score`.
+4. **Presents** results in a React review UI where a Motion content team member can approve, reject, or skip each candidate image.
+
+### Pipeline Flow
 
 ```
-CSV / Elasticsearch catalog
+[CSV / Elasticsearch]
         │
         ▼
-  Web Scraper  ──► Wikimedia / OpenVerse / (optional) manufacturer sites
+ web_scraper.py           — Scrapes Wikimedia Commons + OpenVerse APIs
+        │                   Writes output/json/<product_id>.json
+        │                   Downloads images to output/images/
+        │                   Optionally indexes to Elasticsearch + MinIO
+        ▼
+ classify_json_images.py  — CNN (8-class, 500×500 input)
+        │                   Writes predicted_class + classifier_confidence to JSON
+        │                   Optionally syncs to Elasticsearch
+        ▼
+ image_search_ranker.py   — Fuses signals into final_score
+        │                   final_score = 0.30×ai_conf + 0.20×class_match
+        │                                + 0.30×text_sim + 0.20×prelim_score
+        │                   Exports output/rankings.csv
+        ▼
+ review_queue.json        — Structured output for the React UI
         │
         ▼
-  Image store (local filesystem or MinIO)
-  Metadata store (JSON files, optional Elasticsearch index)
-        │
-        ▼
-  CNN Image Classifier  (predicted_class, classifier_confidence)
-        │
-        ▼
-  Text / Metadata Ranker (ranker_score, score_breakdown)
-        │
-        ▼
-  Final Fused Ranking (final_score, final_rank)
-        │
-        ▼
-  review_queue.json  ──►  Demo MFR Review UI (React)
+ React Review UI          — Approve / Reject / Skip per product
 ```
 
-See [`FlowChartImage-To-Text.md`](FlowChartImage-To-Text.md) and [`docs/PIPELINE_RUNBOOK.md`](docs/PIPELINE_RUNBOOK.md) for deeper detail.
+---
 
-## Prerequisites
+## 2. System Architecture
 
-- Python 3.10+ with `venv`
-- Docker + Docker Compose (for Elasticsearch, Kibana, MinIO)
-- Node.js 18+ and `npm` (only for the React review UI)
-- ~2 GB RAM free for Elasticsearch; additional for PyTorch inference
-- Google Chrome/Chromium available on `PATH` (only for manufacturer scraping via Selenium/Playwright)
+### Components
 
-## Repository Layout
+| Component | Location | Port | Purpose |
+|-----------|----------|------|---------|
+| Web Scraper | `src/web_scraping/web_scraper.py` | — | Core orchestrator: scrape → download → JSON |
+| Image Classifier | `src/Image_Classifier/classify_json_images.py` | — | CNN classification pass |
+| Text Ranker | `src/web_scraping/image_search_ranker.py` | — | Text similarity + final score fusion |
+| Flask API Server | `src/api/server.py` | 5050 | File upload + pipeline trigger + review queue |
+| React UI | `Demo_MFR_Review/…/client/` | 3000 | Input UI + Output UI (review) |
+| Demo Site | `src/demo_mfr_site/site/` | 8000 | Local AMI Bearings catalog (scrape target) |
+| Elasticsearch | Docker | 9200 | Product and image metadata store |
+| MinIO | Docker | 9000 | S3-compatible image object storage |
+
+### Repository Layout
+
+The repository is organized by pipeline stage, with each top-level `src/` module owning one stage and supporting infrastructure at the root.
 
 ```
 .
@@ -69,398 +101,473 @@ See [`FlowChartImage-To-Text.md`](FlowChartImage-To-Text.md) and [`docs/PIPELINE
 ├── uploads/                    Catalog uploads posted through the API
 ├── docker-compose.yml          Elasticsearch, Kibana, and MinIO for local dev
 ├── requirements.txt            Python dependencies
-├── run_pipeline_b.sh           Wrapper that runs the demo MFR pipeline
-└── README.md                   This file
+└── run_pipeline_b.sh           Wrapper that runs the demo MFR pipeline
 ```
 
-## Quick Start
+### Storage Architecture
 
-Use this section to run the full local pipeline from scratch.
+The pipeline uses a two-layer storage model:
 
-### 1. Create the virtual environment
+**Elasticsearch** — metadata only. Two indices:
+- `mi_products` — one document per Motion catalog product
+- `mi_candidate_images` — one document per candidate image, keyed by `SHA1("{product_id}:{image_url}")`
+
+**MinIO** — binary image storage. Object key layout:
+```
+images/{product_id}/{product_id}_{index}_{url_hash}.{ext}
+```
+
+**Local filesystem** — development fallback:
+```
+output/
+  json/           per-product JSON records
+  images/         downloaded image files
+  rankings.csv    ranked candidate export
+```
+
+For full Elasticsearch and MinIO reference, see [`docs/ELASTICSEARCH.md`](docs/ELASTICSEARCH.md) and [`docs/MINIO.md`](docs/MINIO.md).
+
+### CNN Classifier — 8-Class Reference
+
+| `predicted_class` | PGC1 | Description |
+|---|---|---|
+| 0 | 1 | BEARINGS |
+| 1 | 2 | SEALS AND ACCESSORIES |
+| 2 | 3 | POWER TRANSMISSION |
+| 3 | 4 | ELECTRICAL & MAT'L HAND'G |
+| 4 | 5 | HOSE AND FITTINGS |
+| 5 | 6 | FLUID POWER |
+| 6 | 7 | PROCESS PUMPS AND EQUIPMENT |
+| 7 | 8 | INDUSTRIAL SUPPLIES |
+
+---
+
+## 3. Prerequisites
+
+### Required
+- Python 3.10+
+- Docker and Docker Compose
+- Node.js 18+ and npm (only needed to rebuild the React app — a pre-built `build/` is included)
+
+### Optional
+- Chromium + Playwright (Tier 2 manufacturer scraping)
+
+### Verify
+
+```bash
+python3 --version      # must be 3.10+
+docker --version
+docker compose version
+node --version         # only if rebuilding React
+npm --version
+```
+
+---
+
+## 4. Installation and Setup
+
+### 4.1 Clone and enter the repo
+
+```bash
+git clone <repo-url>
+cd MotionIndustries-ImageToProduct
+```
+
+### 4.2 Create the virtual environment
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-If PyTorch was not installed from `requirements.txt`, install it explicitly:
+### 4.3 Install PyTorch
+
+The correct variant depends on your hardware. Run **after** the requirements step:
 
 ```bash
+# CPU-only (works everywhere, slower):
 .venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# CUDA 12.x (NVIDIA GPU):
+.venv/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 ```
 
-Optional, only if you plan to use Tier 2 manufacturer scraping:
+> **Note:** NumPy is pinned to `<2.0` in `requirements.txt`. **DO NOT UPGRADE IT** — The current PyTorch/torchvision build fails classification transforms with NumPy 2.x.
+
+### 4.4 Start Docker services
+
+```bash
+docker compose up -d
+```
+
+| Service | URL |
+|---------|-----|
+| Elasticsearch | http://localhost:9200 |
+| Kibana | http://localhost:5601 |
+| MinIO API | http://localhost:9000 |
+| MinIO Console | http://localhost:9001 |
+
+Default MinIO credentials: `minioadmin` / `minioadmin`
+
+### 4.5 Initialize Elasticsearch indices (one-time)
+
+```bash
+.venv/bin/python src/web_scraping/setup_elasticsearch.py
+```
+
+Use `--recreate` only when mapping changes require dropping and rebuilding the indices:
+
+```bash
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+```
+
+### 4.6 Install Playwright (optional — Tier 2 scraping only)
 
 ```bash
 .venv/bin/playwright install chromium
 ```
 
-### 2. Start local services
+---
 
-```bash
-docker-compose up -d
+## 5. Running the Pipeline
+
+### Pipeline A — Full Web Scrape (CSV Input)
+
+Scrapes real external APIs (Wikimedia Commons + OpenVerse) from a product CSV.
+
+**Prepare your CSV.** The demo CSV at `src/web_scraping/Demo_Site_Products.csv` shows the exepcted format:
+
+```
+motion_product_id,mfr_name,mfr_part_number,web_desc,category
+MB2-10,AMI Bearings Inc.,MB2-10,"Stainless Steel Set Screw Locking Bearing Insert, MB200 Series","Spherical OD Set Screw Stainless Steel Inserts"
 ```
 
-Services:
-
-- Elasticsearch: `http://localhost:9200`
-- Kibana: `http://localhost:5601`
-- MinIO API: `http://localhost:9000`
-- MinIO Console: `http://localhost:9001`
-
-Default MinIO credentials:
-
-- Username: `minioadmin`
-- Password: `minioadmin`
-
-### 3. Initialize Elasticsearch mappings
+**Run:**
 
 ```bash
-.venv/bin/python src/web_scraping/setup_elasticsearch.py
-```
-
-Use `--recreate` only if you intentionally want to drop and rebuild the local indices.
-
-### 4. Run the full pipeline on a small sample
-
-This command validates scraper + classifier + text analysis + final ranker in one run:
-
-```bash
+# Minimal: scrape + classify, local storage only
 .venv/bin/python src/web_scraping/web_scraper.py \
-  --csv src/web_scraping/test_products_sample.csv \
-  --limit 2 \
-  --es \
-  --minio \
+  --csv src/web_scraping/Demo_Site_Products.csv \
   --classify
-```
 
-What this does:
-
-- Loads products from the sample CSV
-- Scrapes candidate images
-- Stores metadata in Elasticsearch
-- Uploads images to MinIO
-- Runs CNN classification
-- Runs text/metadata ranking
-- Writes `final_score` and `final_rank` into the JSON output
-
-### 5. Validate outputs
-
-Check that JSON records were written:
-
-```bash
-ls output/json
-```
-
-Check that classifier fields were written:
-
-```bash
-grep -R "predicted_class" output/json
-grep -R "classifier_confidence" output/json
-```
-
-Check that ranker fields were written:
-
-```bash
-grep -R "ranker_score" output/json
-grep -R "score_breakdown" output/json
-grep -R "final_rank" output/json
-```
-
-Check Elasticsearch summaries:
-
-```bash
-.venv/bin/python src/web_scraping/query_elasticsearch.py --stats
-.venv/bin/python src/web_scraping/query_elasticsearch.py --images
-```
-
-Check MinIO and Elasticsearch consistency:
-
-```bash
-.venv/bin/python src/web_scraping/minio_es_match.py --verify
-```
-
-### 6. If you want a local-files-only run
-
-This skips Elasticsearch and MinIO and writes images to `output/images`:
-
-```bash
+# With Elasticsearch + MinIO, limit for testing
 .venv/bin/python src/web_scraping/web_scraper.py \
-  --csv src/web_scraping/test_products_sample.csv \
-  --limit 2 \
-  --classify
+  --csv src/web_scraping/Demo_Site_Products.csv \
+  --limit 5 --es --minio --classify
+
+# Include Tier 1 manufacturer site scraping
+.venv/bin/python src/web_scraping/web_scraper.py \
+  --csv src/web_scraping/Demo_Site_Products.csv \
+  --mfr-scraping --classify
 ```
 
-### 7. If you want to rerun only the ranker on existing JSON files
+> **Note on live manufacturer sites:** Many high-value manufacturer portals (Grainger, MSC, and others) prohibit automated access via their Terms of Service or enforce bot-protection middleware. The pipeline does not attempt to circumvent these restrictions. See [Scraper Status](#scraper-status) below.
+
+**Export rankings CSV (if not already done by `--classify`):**
 
 ```bash
 .venv/bin/python src/web_scraping/image_search_ranker.py \
   --json-dir output/json \
-  --text-only
+  --output output/rankings.csv
 ```
 
-## Straightforward Pipeline Run Instructions
+---
 
-All commands below assume you are in the repository root.
+### Pipeline B — Demo Site (Recommended First Run)
 
-### Pipeline A: CSV input -> scrape -> classify -> text analysis -> final rank
+The fastest way to see the full end-to-end flow. Uses a local static AMI Bearings demo site as the scrape source — no external API calls required.
 
-1. Start services:
+**Prerequisites:** Steps 4.1–4.3 complete, and `src/Image_Classifier/trained_model.pth` must exist.
+
+**Run everything with one script:**
 
 ```bash
-docker-compose up -d
+./run_pipeline_b.sh
 ```
 
-2. Initialize Elasticsearch:
+This script:
+1. Builds the static demo site (4 AMI Bearings products)
+2. Scrapes those products locally — downloads images, classifies, ranks, and exports
+3. Starts the demo site at **http://localhost:8000**
+4. Starts the API server at **http://localhost:5050**
+5. Serves the React UI at **http://localhost:3000**
+
+To skip rebuilding on subsequent runs:
 
 ```bash
-.venv/bin/python src/web_scraping/setup_elasticsearch.py
+./run_pipeline_b.sh --no-rebuild
 ```
 
-3. Run the full pipeline:
+**Demo walkthrough:**
 
-```bash
-.venv/bin/python src/web_scraping/web_scraper.py \
-  --csv src/web_scraping/test_products_sample.csv \
-  --limit 5 \
-  --es \
-  --minio \
-  --classify
-```
+1. Open http://localhost:3000 → **Input UI** tab → upload `src/web_scraping/Demo_Site_Products.csv`
+2. Click **Output UI** tab → paste `http://localhost:5050/api/review-queue/demo-pipeline` → click **Load Review Queue**
+3. Approve / Reject / Skip each product's candidate images
 
-4. Inspect output files:
+**Stop all services:** `Ctrl+C` in the terminal running `run_pipeline_b.sh`.
 
-- JSON: `output/json/`
-- Local images: `output/images/` when `--minio` is not used
-- MinIO objects: bucket `mi-images` when `--minio` is used
+---
 
-5. Confirm the final pipeline fields exist in JSON:
+### Pipeline C — Elasticsearch-Backed
 
-- `predicted_class`
-- `classifier_confidence`
-- `ranker_score`
-- `score_breakdown`
-- `final_score`
-- `final_rank`
+For large catalog runs where products are already ingested into Elasticsearch.
 
-### Pipeline B: Elasticsearch product catalog -> scrape -> classify -> rank
-
-1. Ingest the catalog into `mi_products`:
+**Ingest catalog:**
 
 ```bash
 .venv/bin/python src/web_scraping/ingest_catalog.py \
   --csv ImageToProduct-Missing_Product_Images.csv
 ```
 
-2. Run the pipeline from Elasticsearch:
+**Run from Elasticsearch:**
 
 ```bash
+# By manufacturer
 .venv/bin/python src/web_scraping/web_scraper.py \
-  --from-es \
-  --mfr-filter SKF \
-  --limit 10 \
-  --es \
-  --minio \
-  --classify
+  --from-es --mfr-filter "SKF" --limit 10 --es --minio --classify
+
+# By enterprise
+.venv/bin/python src/web_scraping/web_scraper.py \
+  --from-es --enterprise-filter "SCHAEFFLER GROUP" --es --minio --classify
 ```
 
-3. Validate results:
+---
 
-```bash
-grep -R "final_rank" output/json
-.venv/bin/python src/web_scraping/query_elasticsearch.py --stats
-```
+### Scraper Status
 
-## Environment Variables
+The web scraper is fully functional for:
+- Open API sources (Wikimedia Commons, OpenVerse)
+- The local demo pipeline (AMI Bearings demo site)
+- Tier 1 manufacturer scrapers for approved domains (`--mfr-scraping`)
 
-The pipeline reads the following environment variables (all optional; defaults match `docker-compose.yml`):
+Live manufacturer portal scraping is currently blocked for the following reason: many high-value industrial distributor sites (including Grainger, MSC, and Motion's own web properties) prohibit automated access in their Terms of Service and/or enforce Incapsula/Imperva bot-protection middleware. The team made a deliberate decision not to use headless browser automation to circumvent these restrictions, in compliance with 18 U.S.C. § 1030 (CFAA) and 17 U.S.C. § 1201 (DMCA). Authorized data access arrangements with Motion Industries' supplier contacts are the planned path to unblocking this source tier.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `ES_HOST` | `localhost` | Elasticsearch host |
-| `ES_PORT` | `9200` | Elasticsearch port |
-| `MINIO_ENDPOINT` | `http://localhost:9000` | MinIO S3-compatible endpoint |
-| `MINIO_ACCESS_KEY` | `minioadmin` | MinIO access key |
-| `MINIO_SECRET_KEY` | `minioadmin` | MinIO secret key |
-| `MINIO_BUCKET` | `mi-images` | Bucket for candidate images |
+---
 
-Override any of these on the CLI (for example `--es-host`, `--minio-endpoint`) or via your shell environment.
+## 6. React Review UI
 
-## Pipeline API Server
-
-A Flask API in [`src/api/server.py`](src/api/server.py) exposes the full pipeline to the React review UI.
+### Start the API server
 
 ```bash
 .venv/bin/python src/api/server.py
+# Listening on http://localhost:5050
 ```
 
-Endpoints:
-
-| Method / Path | Purpose |
-|---------------|---------|
-| `POST /api/upload` | Upload and parse a product catalog (CSV/Excel) |
-| `POST /api/pipeline/run` | Kick off scrape → classify → rank for an uploaded file |
-| `GET  /api/pipeline/status/<job_id>` | Poll pipeline progress |
-| `GET  /api/review-queue` | Serve the latest `review_queue.json` |
-| `GET  /api/review-queue/<job_id>` | Serve `review_queue.json` for a specific job |
-| `GET  /api/jobs` | List all jobs (debug) |
-| `GET  /health` | Liveness probe |
-
-All jobs run with the project root as the working directory, so they share `output/`. This is intentional for local/dev use — not production-safe for concurrent jobs.
-
-## Demo Manufacturer Pipeline
-
-The repository also includes a self-contained demo pipeline under `src/demo_mfr_site/`.
-
-Run it with:
+### Serve the React build
 
 ```bash
-./run_pipeline_b.sh
+cd Demo_MFR_Review/Demo_MFR_Review/client/build
+python3 -m http.server 3000
 ```
 
-Or rebuild the demo artifacts first:
+Open http://localhost:3000/
+
+### Input UI
+
+1. Upload a CSV, Excel (.xlsx/.xls), or JSON file
+2. Set an optional row limit, then click **Run Pipeline**
+3. A log panel shows pipeline progress
+4. When done, the review queue URL is displayed
+
+### Output UI (Review)
+
+1. Paste the review queue URL → click **Load Review Queue**
+2. Left panel: product metadata and manufacturer info
+3. Right panel: candidate images with `ai_confidence`, `text_score`, `final_score`
+4. Bottom: Confidence Table — all candidates ranked by `final_score`
+5. Submit decisions with **Approve**, **Reject**, or **Skip**
+
+### API Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/upload` | Upload product file; returns `jobId` |
+| POST | `/api/pipeline/run` | Start pipeline for a jobId |
+| GET | `/api/pipeline/status/<job_id>` | Poll pipeline progress |
+| GET | `/api/review-queue/<job_id>` | Fetch completed review queue |
+| GET | `/api/review-queue` | Fetch most recent completed job |
+| GET | `/images/<path>` | Serve a downloaded image |
+| GET | `/health` | Server health check |
+
+---
+
+## 7. Configuration Reference
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MINIO_ENDPOINT` | `http://localhost:9000` | MinIO endpoint |
+| `MINIO_ACCESS_KEY` | `minioadmin` | MinIO credentials |
+| `MINIO_SECRET_KEY` | `minioadmin` | MinIO credentials |
+| `MINIO_BUCKET` | `mi-images` | Storage bucket name |
+| `API_PORT` | `5050` | Flask API listen port |
+| `UPLOAD_TRACE` | (unset) | Set to `1` to log upload parsing details |
+
+### Input CSV — Required Columns
+
+| Canonical field | Also accepted |
+|-----------------|--------------|
+| `motion_product_id` | `product_id`, `id` |
+| `mfr_name` | `manufacturer_name`, `manufacturer`, `brand` |
+| `mfr_part_number` | `manufacturer_part_number`, `part_number`, `mpn` |
+| `web_desc` | `web_product_description`, `description` |
+| `category` | `pgc_description`, `product_category` |
+
+### Output Locations
+
+| Artifact | Path |
+|----------|------|
+| Per-product JSON records | `output/json/<product_id>.json` |
+| Downloaded images (local) | `output/images/` |
+| Rankings CSV | `output/rankings.csv` |
+| API job directories | `uploads/jobs/<job_id>/` |
+| Demo pipeline output | `src/demo_mfr_site/pipeline_output/` |
+
+---
+
+## 8. Verifying Outputs
+
+### After scraping
 
 ```bash
-./run_pipeline_b.sh --rebuild
+ls output/json/
+python3 -c "import json; d=json.load(open('output/json/<id>.json')); print(len(d['candidate_images']), 'candidates')"
 ```
 
-The demo pipeline writes outputs to:
-
-- `src/demo_mfr_site/pipeline_output/json/`
-- `src/demo_mfr_site/pipeline_output/images/`
-- `src/demo_mfr_site/pipeline_output/run_summary.json`
-
-It also runs the same three processing stages:
-
-- CNN classifier
-- Text/metadata ranker
-- Final fused ranking
-
-## Quick Start: Demo MFR Review Site (React.js)
-
-### What is it?
-Think of it like a triage screen for a doctor — but instead of patients, you're reviewing candidate product images ranked by the pipeline. It's a browser-based app (built with React) that lets a human reviewer look at each product, compare the images the pipeline found, and stamp each one as approved, rejected, or skipped.
-
-### Why would you use it?
-The pipeline produces ranked candidate images automatically, but someone still needs to make the final call on whether a match is good. This site replaces that step from a spreadsheet or raw JSON file with a structured, click-through review interface.
-
-### Get started
-
-1. **Install dependencies** — from the repo root, run:
-
-   ```bash
-   cd Demo_MFR_Review/Demo_MFR_Review/client
-   npm install
-   ```
-
-2. **Place the pipeline output file** — copy `review_queue.json` (produced by the demo pipeline) into `public/assets/data/review_queue.json` so the app can load it. The demo pipeline writes this file to `src/demo_mfr_site/pipeline_output/`; the default URL the app fetches is `assets/data/review_queue.json`.
-
-3. **Start the development server:**
-
-   ```bash
-   npm start
-   ```
-
-   The app opens at `http://localhost:3000` in your browser.
-
-4. **Use the three tabs in the app:**
-   - **Input UI** — upload the product Excel/CSV to browse the product database.
-   - **Output UI** — enter the URL to `review_queue.json`, click "Load Review Queue", then approve or reject each product's best candidate image. Use arrow keys to flip between candidate images.
-   - **Review History** — see every decision made during the current browser session.
-
-To build a static copy instead of running the dev server:
+### After classification
 
 ```bash
-npm run build
+grep -l "predicted_class" output/json/*.json | wc -l
 ```
 
-Then serve the `build/` folder with any static file server (e.g. `npx serve build`). A pre-built copy already lives at `Demo_MFR_Review/Demo_MFR_Review/client/build/`.
-
-### What to expect
-After loading the review queue, you will see one product at a time with its ranked candidate images and confidence scores; each decision moves the product out of the queue and into the history tab.
-
-## What This Repository Does
-
-- Ingests product catalog rows from CSV or Elasticsearch
-- Scrapes candidate images from Wikimedia, OpenVerse, and optional manufacturer sources
-- Stores image binaries locally or in MinIO
-- Stores product and candidate metadata in Elasticsearch
-- Runs the CNN classifier on downloaded images
-- Runs a text/metadata ranker on scraped candidates
-- Combines both signals into a final ranking
-
-## Documentation Map
-
-Top-level:
-
-- [`README.md`](README.md): quick start and end-to-end run instructions (this file)
-- [`CLAUDE.md`](CLAUDE.md): agent/contributor coding conventions
-- [`PIPELINE_GUIDE.md`](PIPELINE_GUIDE.md): extended end-to-end pipeline guide
-- [`FlowChartImage-To-Text.md`](FlowChartImage-To-Text.md): visual flow chart of the stages
-- [`Demo_MFR_Review-PipelineIntegration.md`](Demo_MFR_Review-PipelineIntegration.md): how the React UI integrates with the pipeline
-
-`docs/`:
-
-- [`docs/PIPELINE_RUNBOOK.md`](docs/PIPELINE_RUNBOOK.md): canonical runbook
-- [`docs/PIPELINE_TEST_STEPS.md`](docs/PIPELINE_TEST_STEPS.md): step-by-step validation procedures
-- [`docs/ELASTICSEARCH.md`](docs/ELASTICSEARCH.md): Elasticsearch mappings and query examples
-- [`docs/MINIO.md`](docs/MINIO.md): MinIO object layout and verification
-- [`docs/INTEGRATION_PLAN.md`](docs/INTEGRATION_PLAN.md): integration backlog and remaining work
-- [`docs/LIVE_INTEGRATION_PLAN.md`](docs/LIVE_INTEGRATION_PLAN.md): live integration plan
-- [`docs/SourceProductImages.md`](docs/SourceProductImages.md): image source inventory
-- [`docs/backlog.md`](docs/backlog.md): outstanding backlog
-- [`docs/architecture.md`](docs/architecture.md): architecture notes
-- [`docs/conventions.md`](docs/conventions.md): language/framework conventions
-
-Subsystem READMEs:
-
-- [`src/web_scraping/README.md`](src/web_scraping/README.md): scraper CLI reference
-- [`src/Image_Classifier/README.md`](src/Image_Classifier/README.md): CNN architecture and inference
-- [`src/demo_mfr_site/README.md`](src/demo_mfr_site/README.md): AMI Bearings demo catalog
-- [`tests/README.md`](tests/README.md): test suite coverage
-
-## Notes
-
-- The scraper currently generates search terms via `simple_search_keywords()`.
-- `--classify` on [`web_scraper.py`](/home/aceaid/MotionIndustries-ImageToProduct/src/web_scraping/web_scraper.py) runs more than just the CNN. It also runs the text ranker and applies the final ranking pass.
-- Standalone classification via [`classify_json_images.py`](/home/aceaid/MotionIndustries-ImageToProduct/src/Image_Classifier/classify_json_images.py) only performs the classifier pass unless you separately run the ranker.
-
-## Model Training
-
-Training artifacts and scripts live under `Model_Development/` and `src/Image_Classifier/`:
-
-- [`Model_Development/training.py`](Model_Development/training.py) and [`Model_Development/training_notebook.ipynb`](Model_Development/training_notebook.ipynb) — training loop, loss/accuracy tracking, checkpointing
-- [`Model_Development/filtering_images.py`](Model_Development/filtering_images.py), [`Model_Development/class_analysis.py`](Model_Development/class_analysis.py) — dataset preparation and class distribution analysis
-- [`src/Image_Classifier/train.py`](src/Image_Classifier/train.py) — standalone trainer mirroring the notebook
-- [`src/Image_Classifier/trained_model.pth`](src/Image_Classifier/trained_model.pth) — pretrained weights consumed at inference time
-- [`data/training_manifest.csv`](data/training_manifest.csv) — manifest mapping product rows to image files
-
-Inference at pipeline time is handled by [`src/Image_Classifier/img_classifier.py`](src/Image_Classifier/img_classifier.py) and [`src/Image_Classifier/classify_json_images.py`](src/Image_Classifier/classify_json_images.py). See [`src/Image_Classifier/README.md`](src/Image_Classifier/README.md) for the full model architecture table.
-
-## Testing
+### After ranking
 
 ```bash
-# Full test suite
-.venv/bin/python -m pytest -q
-
-# Scraper/classifier/ranker integration
-.venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
-
-# API upload parsing
-.venv/bin/python -m pytest -q tests/test_api_upload_parsing.py
+wc -l output/rankings.csv
+python3 -c "
+import csv
+rows = list(csv.DictReader(open('output/rankings.csv')))
+for r in rows[:5]:
+    print(r['motion_product_id'], r['image_rank'], r['final_score_pct'])
+"
 ```
 
-See [`tests/README.md`](tests/README.md) for the full list of covered scenarios.
-
-## Useful Validation Test
-
-There is an integration-style test covering the scraper/classifier boundary and ranker output fields:
+### Running tests
 
 ```bash
-.venv/bin/python -m pytest -q tests/test_scraper_classifier_pipeline.py
+.venv/bin/pytest tests/ -v
 ```
 
-## Motion Shared Folder
+The test suite covers: CSV/Excel/JSON upload parsing, binary file rejection, scraper↔classifier boundary, MinIO-backed classification (mocked), and ES sync (mocked).
 
-[Image Dataset, Image Mapping, Images](https://genparts-my.sharepoint.com/:f:/r/personal/michael_flack_corp_motion-ind_com/Documents/GT%20Capstone?csf=1&web=1&e=s92NcQ)
+---
+
+## 9. Resetting the Environment
+
+```bash
+# Clear pipeline outputs
+rm -rf output/json/* output/images/* output/rankings.csv
+
+# Reset demo pipeline output
+rm -rf src/demo_mfr_site/pipeline_output/
+rm -f src/demo_mfr_site/site/assets/data/review_queue.json
+
+# Reset Elasticsearch indices (WARNING: deletes all metadata)
+.venv/bin/python src/web_scraping/setup_elasticsearch.py --recreate
+
+# Stop Docker services
+docker compose down
+
+# Stop Docker and delete all stored data
+docker compose down -v
+```
+
+---
+
+## 10. Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `trained_model.pth not found` | Model weights not committed (too large for git) | Obtain from project team or retrain via `src/Image_Classifier/train.py` |
+| `Could not connect to Elasticsearch` | Docker not running | `docker compose up -d`, wait 30–60s, then `curl http://localhost:9200/_cluster/health` |
+| `Could not connect to MinIO` | Docker not running | `docker compose up -d`, then `curl http://localhost:9000/minio/health/live` |
+| `Failed to load review queue` | API server not running or wrong URL | `curl http://localhost:5050/health`, then `curl http://localhost:5050/api/jobs` |
+| Images don't load in review UI | `file://` URLs not browser-accessible | Add Flask `/images/<path>` route (Phase 3 of live integration plan) |
+| CSV upload fails with encoding error | Non-UTF-8 encoding | Enable `UPLOAD_TRACE=1` to see per-encoding failure details |
+| `No candidate images found` | Wikimedia/OpenVerse returned no results | Enrich the `web_desc` column — the scraper uses the first 4–5 words as search terms |
+| `run_pipeline_b.sh` hangs on port check | `nc` (netcat) not installed | `sudo apt-get install -y netcat-openbsd` or `brew install netcat` |
+
+---
+
+## 11. Documentation Map
+
+| File | Contents |
+|------|----------|
+| `README.md` | This file — quick start and full pipeline reference |
+| `CLAUDE.md` | AI assistant instructions and code conventions |
+| `docs/ELASTICSEARCH.md` | Index mappings, query examples, write path, validation commands |
+| `docs/MINIO.md` | Object key layout, health checks, environment variables |
+| `docs/INTEGRATION_PLAN.md` | Implementation status, remaining work, GCP migration plan |
+| `docs/LIVE_INTEGRATION_PLAN.md` | Backend API + React frontend integration design and test plan |
+| `docs/backlog.md` | Sprint-by-sprint commit history and open task list |
+| `docs/SourceProductImages.md` | Source priority list, scraping recipes, legal constraints |
+| `docs/architecture.md` | High-level architecture notes (stub — expand as needed) |
+| `docs/conventions.md` | Code style and testing conventions |
+| `FlowChartImage-To-Text.md` | Text translation of the pipeline flowchart |
+| `Demo_MFR_Review-PipelineIntegration.md` | Checklist for merging the review frontend into the demo site |
+| `src/web_scraping/README.md` | Web scraper CLI reference |
+| `src/Image_Classifier/README.md` | CNN classifier architecture and usage |
+| `src/demo_mfr_site/README.md` | Demo site rebuild and serve instructions |
+| `tests/README.md` | Test suite reference |
+
+---
+
+## 12. Project Backlog and Status
+
+See [`docs/backlog.md`](docs/backlog.md) for the full sprint-by-sprint commit history.
+
+### Current Status (as of April 2026)
+
+| Stage | Status |
+|-------|--------|
+| Web Scraper (open APIs) | ✅ Functional |
+| Web Scraper (demo site) | ✅ Functional |
+| Web Scraper (live manufacturer portals) | ⚠️ Blocked — see [Scraper Status](#scraper-status) |
+| CNN Image Classifier | ✅ Functional (88–98% test accuracy) |
+| Text Similarity / Ranker | ✅ Functional (token-overlap baseline) |
+| Final Score + Ranking | ✅ Functional |
+| Flask API Server | ✅ Functional |
+| React Review UI | ✅ Functional |
+| Image serving in review UI (`/images/` route) | 🔲 Pending (Phase 3) |
+| Review decision persistence (backend) | 🔲 Pending (Phase 6) |
+| GCP Cloud Storage migration | 🔲 Pending — contact established with Motion Industries |
+
+### GCP Production Migration
+
+For production deployment, the following transitions are planned:
+
+| Dev component | Production equivalent |
+|---|---|
+| MinIO (Docker) | GCP Cloud Storage |
+| Elasticsearch (Docker) | Managed Elasticsearch or GCP-equivalent |
+| Flask API (local) | Cloud Run |
+| Docker images | Artifact Registry |
+| CNN + text models | Vertex AI |
+
+Contact: anu.shrestha@motion.com, george.baldwin@motion.com
+
+---
+
+## 13. Team and Contacts
+
+| Name | Role | Email |
+|------|------|-------|
+| Ace Ehrenhalt | Feedback Pipeline, Web Scraper, Database | aehrenhalt3@gatech.edu |
+| Rodrigo Gaeta-Lopez | ML Model Development | rlopez76@gatech.edu |
+| Nia Simon | Image Discovery, Expo Coordinator | nsimon33@gatech.edu |
+| Faris Unal | UI / Webmaster | funal7@gatech.edu |
+| Prof. Patricio Vela | Faculty Advisor | pvela@gatech.edu |
+
+Motion Industries shared dataset:
+[GT Capstone OneDrive](https://genparts-my.sharepoint.com/:f:/r/personal/michael_flack_corp_motion-ind_com/Documents/GT%20Capstone?csf=1&web=1&e=s92NcQ)
