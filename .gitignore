@@ -34,3 +34,6 @@ node_modules/
 
 # Temporary crawl runtime artifacts
 .crawl4ai_runtime/
+
+# Web Scraper Output
+*/output/
