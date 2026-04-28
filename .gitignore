@@ -36,4 +36,4 @@ node_modules/
 .crawl4ai_runtime/
 
 # Web Scraper Output
-*/output/
+output/
