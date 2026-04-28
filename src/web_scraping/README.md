@@ -103,6 +103,45 @@ python web_scraper.py --csv test_products_sample.csv --limit 5 --no-download
 python web_scraper.py --csv test_products_sample.csv --mfr-scraping --mfr-only
 ```
 
+## Product Image Search Script
+
+`text_based_search.py` is a standalone CLI that builds a web search query from product attributes and opens image search results in the default browser. Unlike `web_scraper.py`, it does not download or classify images — it simply generates search URLs. No external dependencies beyond Python 3.x.
+
+### Usage (text_based_search.py)
+
+```bash
+python text_based_search.py [OPTIONS]
+```
+
+At least one argument is required.
+
+### Options (text_based_search.py)
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--item-name` | `-n` | Product / item name |
+| `--item-size` | `-s` | Item size (e.g. `10mm`, `Large`) |
+| `--manufacture-number` | `-mn` | Manufacturer part / model number |
+| `--manufacture-vin` | `-mv` | Manufacturer VIN / serial |
+| `--enterprise-product-number` | `-ep` | Enterprise product number |
+| `--enterprise-vin` | `-ev` | Enterprise VIN |
+| `--product-description` | `-d` | Product description (first 8 words used) |
+| `--engine` | `-e` | `google`, `bing`, `duckduckgo`, or `all` (default: `google`) |
+| `--print-only` | `-p` | Print URLs instead of opening in browser |
+
+### Examples (text_based_search.py)
+
+```bash
+# Search by name
+python text_based_search.py -n "stainless steel bolt"
+
+# Search by manufacturer number and size
+python text_based_search.py -mn "AB-1234" -s "10mm"
+
+# Print URLs for all engines without opening browser
+python text_based_search.py -n "widget" -e all -p
+```
+
 ## Notes
 
 - Search queries are generated from manufacturer part number + first 5 words of product description, with a brand-context variant using manufacturer name. Falls back to PGC category if no description is available.
